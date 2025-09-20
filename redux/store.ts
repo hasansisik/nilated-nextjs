@@ -14,6 +14,7 @@ import otherReducer from './reducers/otherReducer';
 import generalReducer from "./reducers/generalReducer";
 import contactFormReducer from "./reducers/contactFormReducer";
 import pageReducer from "./reducers/pageReducer";
+import kalpReducer from "./reducers/kalpReducer";
 
 export const store = configureStore({
   reducer: {
@@ -31,6 +32,7 @@ export const store = configureStore({
     general: generalReducer,
     contactForm: contactFormReducer,
     page: pageReducer,
+    kalp: kalpReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
   middleware: (getDefaultMiddleware) =>
