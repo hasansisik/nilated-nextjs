@@ -1,0 +1,23 @@
+{
+  "activeProject": "services5",
+  "services5": {
+    "title": "Explore Our Projects",
+    "subtitle": "What we offer",
+    "description": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
+    "buttonText": "Get Free Quote",
+    "buttonLink": "#",
+    "linkText": "How We Work",
+    "linkUrl": "#",
+    "backgroundColor": "#ffffff",
+    "titleColor": "#333333",
+    "buttonColor": "#6342EC"
+  },
+  "project2": {
+    "title": "Our featured projects",
+    "subtitle": "Recent work",
+    "description": "⚡Don't miss any contact. Stay connected.",
+    "backgroundColor": "#f8f9fa",
+    "titleColor": "#333333",
+    "badgeColor": "rgba(99, 66, 236, 0.1)"
+  }
+} 

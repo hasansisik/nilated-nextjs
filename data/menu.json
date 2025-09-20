@@ -1,0 +1,191 @@
+{
+  "mainMenuItems": [
+    {
+      "title": "Home",
+      "href": "#",
+      "dropdown": true,
+      "dropdownType": "menu-item-has-children",
+      "dropdownItems": [
+        {
+          "title": "Home page v.1",
+          "href": "/",
+          "subtitle": "Business Startup",
+          "icon": "home1"
+        },
+        {
+          "title": "Home page v.2",
+          "href": "/home-2",
+          "subtitle": "Application Landing",
+          "icon": "home2"
+        },
+        {
+          "title": "Home page v.3",
+          "href": "/home-3",
+          "subtitle": "Marketing Services",
+          "icon": "home3"
+        },
+        {
+          "title": "Home page v.4",
+          "href": "/home-4",
+          "subtitle": "IT Services",
+          "icon": "home4"
+        },
+        {
+          "title": "Home page v.5",
+          "href": "/home-5",
+          "subtitle": "Consulting Services",
+          "icon": "home5"
+        }
+      ]
+    },
+    {
+      "title": "Pages",
+      "href": "#",
+      "dropdown": true,
+      "dropdownType": "has-mega-menu",
+      "megaMenuSections": [
+        {
+          "title": "ABOUT US",
+          "links": [
+            { "title": "About us v.1", "href": "/page-about" },
+            { "title": "About us v.2", "href": "/page-about-2" },
+            { "title": "About us v.3", "href": "/page-about-3" }
+          ]
+        },
+        {
+          "title": "SERVICES",
+          "links": [
+            { "title": "Services v.1", "href": "/page-services-1" },
+            { "title": "Services v.2", "href": "/page-services-2" },
+            { "title": "Services v.3", "href": "/page-services-3" },
+            { "title": "Services details v.1", "href": "/page-services-details-1" },
+            { "title": "Services details v.2", "href": "/page-services-details-2" }
+          ]
+        },
+        {
+          "title": "OUR TEAM",
+          "links": [
+            { "title": "Our team v.1", "href": "/page-team-1" },
+            { "title": "Our team v.2", "href": "/page-team-2" },
+            { "title": "Our team v.3", "href": "/page-team-3" },
+            { "title": "Our team v.4", "href": "/page-team-4" },
+            { "title": "Our team v.5", "href": "/page-team-5" },
+            { "title": "Our team v.6", "href": "/page-team-6" },
+            { "title": "Team detail v.1", "href": "/page-team-detail-1" },
+            { "title": "Team detail v.2", "href": "/page-team-detail-2" }
+          ]
+        },
+        {
+          "title": "FEATURES",
+          "links": [
+            { "title": "Features v.1", "href": "/page-features-1" },
+            { "title": "Features v.2", "href": "/page-features-2" }
+          ]
+        },
+        {
+          "title": "PRICING",
+          "links": [
+            { "title": "Pricing v.1", "href": "/page-pricing-01" },
+            { "title": "Pricing v.2", "href": "/page-pricing-02" }
+          ]
+        },
+        {
+          "title": "CONTACT",
+          "links": [
+            { "title": "Contact v.1", "href": "/page-contact-1" },
+            { "title": "Contact v.2", "href": "/page-contact-2" },
+            { "title": "Contact v.3", "href": "/page-contact-3" }
+          ]
+        },
+        {
+          "title": "BLOG",
+          "links": [
+            { "title": "Blog v.1", "href": "/page-blog-1" },
+            { "title": "Blog v.2", "href": "/page-blog-2" },
+            { "title": "Blog details", "href": "/page-blog-details" }
+          ]
+        },
+        {
+          "title": "CASE STUDY",
+          "links": [
+            { "title": "Case Study", "href": "/page-case-study" },
+            { "title": "Case study details", "href": "/page-case-study-details" }
+          ]
+        },
+        {
+          "title": "AUTHENTICATION",
+          "links": [
+            { "title": "Register", "href": "/page-register" },
+            { "title": "Sign in", "href": "/page-login" }
+          ]
+        },
+        {
+          "title": "UTILITIES",
+          "links": [
+            { "title": "Work Process", "href": "/page-work-process" },
+            { "title": "Book a demo", "href": "/page-book-a-demo" },
+            { "title": "Integration", "href": "/page-integration" },
+            { "title": "Change log", "href": "/page-changelog" },
+            { "title": "Privacy policy", "href": "/page-privacy-policy" },
+            { "title": "Terms conditions", "href": "/page-terms-conditions" },
+            { "title": "Comming soon", "href": "/page-comming-soon" },
+            { "title": "Error 404", "href": "/page-404" }
+          ]
+        },
+        {
+          "title": "STYLE GUIDE",
+          "links": [
+            { "title": "Color Typography", "href": "/page-style-guide" },
+            { "title": "Basic elements", "href": "/page-elements" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sections",
+      "href": "#",
+      "dropdown": true,
+      "dropdownType": "has-mega-menu-2",
+      "sections": [
+        { "title": "Navigation", "href": "/section-navigation", "count": "09" },
+        { "title": "Hero", "href": "/section-hero", "count": "05" },
+        { "title": "Logo cloud", "href": "/section-logo-cloud", "count": "05" },
+        { "title": "Call to action", "href": "/section-cta", "count": "15" },
+        { "title": "How it work", "href": "/section-how-it-work", "count": "02" },
+        { "title": "Services", "href": "/section-services", "count": "04" },
+        { "title": "Team", "href": "/section-team", "count": "07" },
+        { "title": "Pricing", "href": "/section-pricing", "count": "05" },
+        { "title": "FAQS", "href": "/section-faqs", "count": "03" },
+        { "title": "Testimonials", "href": "/section-testimonial", "count": "04" },
+        { "title": "Blog", "href": "/section-blog", "count": "05" },
+        { "title": "Newsletter", "href": "/section-newsletter", "count": "03" },
+        { "title": "Footer", "href": "/section-footer", "count": "05" },
+        { "title": "Features", "href": "/section-features", "count": "13" },
+        { "title": "Projects", "href": "/section-projects", "count": "02" },
+        { "title": "Contact", "href": "/section-contact", "count": "06" },
+        { "title": "Static", "href": "/section-static", "count": "03" }
+      ]
+    },
+    {
+      "title": "Style Guide",
+      "href": "#",
+      "dropdown": true,
+      "dropdownType": "menu-item-has-children",
+      "dropdownItems": [
+        {
+          "title": "Style guide",
+          "href": "/page-style-guide"
+        },
+        {
+          "title": "Elements",
+          "href": "/page-elements"
+        }
+      ]
+    },
+    {
+      "title": "Contact",
+      "href": "/page-contact-1",
+      "dropdown": false
+    }
+  ]
+} 
