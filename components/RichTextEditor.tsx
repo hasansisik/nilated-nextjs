@@ -67,9 +67,11 @@ const VideoExtension = TiptapNode.create({
       },
       provider: {
         default: 'youtube', // youtube or vimeo
+        parseHTML: element => element.getAttribute('data-provider') || 'youtube',
       },
       videoId: {
         default: null,
+        parseHTML: element => element.getAttribute('data-video-id') || null,
       },
       align: {
         default: 'center', // 'left', 'center', 'right', 'full'
@@ -107,6 +109,7 @@ const VideoExtension = TiptapNode.create({
       embedUrl = `https://player.vimeo.com/video/${videoId}`;
     }
     
+    
     // Convert align value to HTML attributes and inline styles
     let style = '';
     let alignAttr = align;
@@ -125,17 +128,20 @@ const VideoExtension = TiptapNode.create({
     return [
       'div', 
       { 
-        class: 'video-embed resizable-video', 
+        class: 'video-embed my-6', 
         'data-video': '', 
-        style: `position: relative; margin: 1em 0; ${style}`,
+        'data-video-id': videoId,
+        'data-provider': provider,
+        style: `position: relative; margin: 1.5rem 0; width: 100%; ${style}`,
         align: alignAttr
       }, 
       ['iframe', { 
         src: embedUrl,
-        width: width || '100%',
-        height: height || '400px',
+        width: '100%',
+        height: '400px',
         frameborder: '0',
         allowfullscreen: 'true',
+        style: 'width: 100%; height: 400px;'
       }],
     ];
   },
@@ -144,10 +150,27 @@ const VideoExtension = TiptapNode.create({
 // Helper function to extract video ID from URLs
 const getVideoId = (url: string, provider: 'youtube' | 'vimeo'): string | null => {
   if (provider === 'youtube') {
-    // Match YouTube URL patterns - daha geniş regex ile farklı URL biçimlerini destekle
+    // Match YouTube URL patterns - simplified and more reliable regex
     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
     const match = url.match(youtubeRegex);
-    return match ? match[1] : null;
+    
+    if (match) {
+      return match[1];
+    }
+    
+    // Fallback: try to extract from watch?v= parameter
+    const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
+    if (watchMatch) {
+      return watchMatch[1];
+    }
+    
+    // Another fallback for youtu.be links
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
+    if (shortMatch) {
+      return shortMatch[1];
+    }
+    
+    return null;
   } else if (provider === 'vimeo') {
     // Match Vimeo URL patterns
     const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?))/i;
@@ -168,6 +191,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const [isLinkMenuOpen, setIsLinkMenuOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
   const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [selectedColor, setSelectedColor] = useState('#000000');
@@ -192,32 +216,39 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Initialize editor with initial content
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         paragraph: {
           HTMLAttributes: {
-            class: 'mb-3',
+            class: 'my-4 whitespace-pre-wrap',
           },
         },
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
           HTMLAttributes: {
-            class: 'font-bold mt-4 mb-2',
+            class: 'font-bold mt-6 mb-3 whitespace-pre-wrap',
           },
         },
         bulletList: {
           HTMLAttributes: {
-            class: 'pl-5 mb-4 list-disc space-y-1',
+            class: 'pl-6 my-4 list-disc space-y-2',
           },
         },
         orderedList: {
           HTMLAttributes: {
-            class: 'pl-5 mb-4 list-decimal space-y-1',
+            class: 'pl-6 my-4 list-decimal space-y-2',
           },
         },
         listItem: {
           HTMLAttributes: {
-            class: 'mb-1',
+            class: 'my-1 whitespace-pre-wrap',
+          },
+        },
+        hardBreak: {
+          keepMarks: false,
+          HTMLAttributes: {
+            class: 'whitespace-pre-wrap',
           },
         },
       }),
@@ -255,8 +286,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const imageNode = editor.isActive('image') ? editor.getAttributes('image') : null;
       setSelectedImageNode(imageNode);
       
-      // Check if the selection contains a video
+      // Check if the selection contains a video - sadece manuel seçimde
       const videoNode = editor.isActive('video') ? editor.getAttributes('video') : null;
+      
+      // Video seçimini sadece resize handle'a tıklandığında aktif et
+      if (videoNode) {
+        const selection = editor.state.selection;
+        const { $from } = selection;
+        const node = $from.node();
+        
+        // Eğer video node'u seçiliyse ama resize handle'a tıklanmamışsa seçimi kaldır
+        if (node && node.type.name === 'video') {
+          // Video seçimini sadece resize handle ile yapılabilir hale getir
+          const videoElement = document.querySelector('.ProseMirror .video-embed.ProseMirror-selectednode');
+          if (videoElement && !videoElement.querySelector('.video-resize-handle:hover')) {
+            // Video seçimini kaldır
+            editor.commands.blur();
+          }
+        }
+      }
+      
       setSelectedVideoNode(videoNode);
       
       // Update selected node alignment
@@ -268,7 +317,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class: editorClasses + ' outline-none border-none ring-0 ring-offset-0',
+        class: editorClasses + ' outline-none border-none ring-0 ring-offset-0 min-h-[300px]',
         placeholder,
         spellcheck: 'false',
       },
@@ -353,17 +402,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const videoId = getVideoId(videoUrl, videoProvider);
       
       if (videoId) {
+        const videoAttrs = {
+          videoId,
+          provider: videoProvider,
+          width: '100%',
+          height: '400px'
+        };
+                
         editor
           .chain()
           .focus()
           .insertContent({
             type: 'video',
-            attrs: {
-              videoId,
-              provider: videoProvider,
-              width: '100%',
-              height: '400px'
-            }
+            attrs: videoAttrs
           })
           .run();
         
@@ -375,7 +426,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           videoProvider === 'youtube' 
             ? 'https://www.youtube.com/watch?v=abcdefghijk veya https://youtu.be/abcdefghijk' 
             : 'https://vimeo.com/123456789'
-        }`);
+        }\n\nGirilen URL: ${videoUrl}`);
       }
     }
   };
@@ -397,14 +448,35 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       // Check if URL has protocol
       const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
       
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run();
+      // Check if there's selected text
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (selectedText) {
+        // If text is selected, make it a link
+        editor
+          .chain()
+          .focus()
+          .setLink({ href: url })
+          .run();
+      } else if (linkText) {
+        // If link text is provided, insert it as a link
+        editor
+          .chain()
+          .focus()
+          .insertContent(`<a href="${url}" class="text-blue-600 underline">${linkText}</a>`)
+          .run();
+      } else {
+        // If no text is selected and no link text, insert the URL as clickable text
+        editor
+          .chain()
+          .focus()
+          .insertContent(`<a href="${url}" class="text-blue-600 underline">${url}</a>`)
+          .run();
+      }
       
       setLinkUrl('');
+      setLinkText('');
       setIsLinkMenuOpen(false);
     }
   };
@@ -489,6 +561,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     setTimeout(() => {
       editor?.commands.focus('end');
       
+      
       // Görüntü ve video boyutlandırma sorununu düzeltmek için ölçeklendirilmesini sağlayalım
       if (editor) {
         // Görüntüleri boyutlandır
@@ -523,92 +596,29 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             
             videoContainer.setAttribute('data-original-width', width);
             videoContainer.setAttribute('data-original-height', height);
+            
+            // Video'ya tıklanmadığında seçimi engelle
+            videoContainer.addEventListener('mousedown', (e) => {
+              // Eğer iframe'e tıklanmışsa seçimi engelle
+              if (e.target === iframe) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              }
+            });
+            
+            // Video container'a tıklanmadığında seçimi engelle
+            videoContainer.addEventListener('click', (e) => {
+              if (e.target === videoContainer || e.target === iframe) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+              }
+            });
           }
         });
         
-        // Videolara resize işlemi ekleyelim - manuel tıklama olayları
-        const setupVideoResizeHandlers = () => {
-          const resizableVideos = document.querySelectorAll('.resizable-video');
-          resizableVideos.forEach((container) => {
-            // Eğer daha önce işaretleyici eklenmemişse ekle
-            if (!container.querySelector('.video-resize-handle')) {
-              const resizeHandle = document.createElement('div');
-              resizeHandle.className = 'video-resize-handle';
-              container.appendChild(resizeHandle);
-              
-              // Boyutlandırma işlemi için olay dinleyicileri ekle
-              let isResizing = false;
-              let initialWidth = 0;
-              let initialX = 0;
-              
-              resizeHandle.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                isResizing = true;
-                
-                // İlk tıklama noktasını ve genişliği kaydet
-                const iframe = container.querySelector('iframe') as HTMLIFrameElement;
-                if (iframe) {
-                  initialWidth = iframe.offsetWidth;
-                  initialX = e.clientX;
-                  
-                  // Video seçiliyken stil ekle
-                  container.classList.add('resizing');
-                }
-                
-                // Mouse hareketlerini takip et
-                const onMouseMove = (moveEvent: MouseEvent) => {
-                  if (isResizing) {
-                    const iframe = container.querySelector('iframe') as HTMLIFrameElement;
-                    if (iframe) {
-                      // Yeni genişliği hesapla
-                      const deltaX = moveEvent.clientX - initialX;
-                      const newWidth = Math.max(200, initialWidth + deltaX);
-                      
-                      // Video genişliğini güncelle
-                      iframe.style.width = `${newWidth}px`;
-                      (container as HTMLElement).style.width = `${newWidth}px`;
-                    }
-                  }
-                };
-                
-                // Mouse bırakıldığında olayları temizle
-                const onMouseUp = () => {
-                  isResizing = false;
-                  container.classList.remove('resizing');
-                  
-                  // Olayları temizle
-                  document.removeEventListener('mousemove', onMouseMove);
-                  document.removeEventListener('mouseup', onMouseUp);
-                  
-                  // Editörü güncelle - değişiklikleri kaydet
-                  const iframe = container.querySelector('iframe') as HTMLIFrameElement;
-                  if (iframe && editor) {
-                    const videoNode = editor.state.doc.nodeAt(editor.state.selection.anchor);
-                    if (videoNode && videoNode.type.name === 'video') {
-                      editor.commands.updateAttributes('video', {
-                        width: iframe.style.width
-                      });
-                    }
-                  }
-                };
-                
-                // Global olayları ekle
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-              });
-            }
-          });
-        };
-        
-        // Video boyutlandırma işaretçilerini ayarla
-        setupVideoResizeHandlers();
-        
-        // Editör içeriği değiştiğinde işaretçileri güncelle
-        editor.on('update', () => {
-          setTimeout(() => {
-            setupVideoResizeHandlers();
-          }, 100);
-        });
+        // Video boyutlandırma özelliğini kaldırdık - video'lar tam genişlikte görünecek
       }
     }, 100);
   }, [editor]);
@@ -937,17 +947,52 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <LinkIcon className="h-4 w-4" />
               </Button>
               {isLinkMenuOpen && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white border rounded-md shadow-md z-10 flex gap-2 items-center min-w-[250px]" ref={linkInputRef}>
-                  <Input
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="w-full"
-                    onKeyDown={(e) => e.key === 'Enter' && insertLink()}
-                  />
-                  <Button size="sm" onClick={insertLink} type="button" disabled={!linkUrl}>
-                    Add
-                  </Button>
+                <div className="absolute top-full left-0 mt-1 p-3 bg-white border rounded-md shadow-md z-10 flex flex-col gap-2 min-w-[300px]" ref={linkInputRef}>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">Link Text (Optional)</label>
+                    <Input
+                      value={linkText}
+                      onChange={(e) => setLinkText(e.target.value)}
+                      placeholder="Link text..."
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">URL</label>
+                    <Input
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="w-full"
+                      onKeyDown={(e) => e.key === 'Enter' && insertLink()}
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setLinkUrl('');
+                        setLinkText('');
+                        setIsLinkMenuOpen(false);
+                      }}
+                      type="button"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={insertLink} 
+                      type="button" 
+                      disabled={!linkUrl}
+                      className="flex-1"
+                    >
+                      Add Link
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1217,7 +1262,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             className={`editor-content ${editorClasses} focus-visible:outline-none focus-visible:ring-0 border-0`}
           />
           {!editor?.getText() && (
-            <div className="absolute top-0 left-0 p-4 text-gray-400 pointer-events-none">
+            <div className="absolute top-4 left-4 text-gray-400 pointer-events-none select-none">
               {placeholder}
             </div>
           )}
@@ -1264,6 +1309,132 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           overflow-y: auto;
           outline: none !important;
           border: none !important;
+        }
+        
+        /* ProseMirror content spacing */
+        .ProseMirror {
+          min-height: 300px;
+          padding: 1rem;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          font-family: inherit;
+          line-height: 1.6;
+        }
+        
+        /* ProseMirror text nodes */
+        .ProseMirror .text {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          font-family: inherit;
+        }
+        
+        /* ProseMirror paragraph content */
+        .ProseMirror p .text {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        
+        /* Space character handling */
+        .ProseMirror p {
+          white-space: pre-wrap;
+          word-spacing: normal;
+        }
+        
+        /* Ensure spaces are preserved */
+        .ProseMirror * {
+          white-space: inherit;
+        }
+        
+        /* Link styles */
+        .ProseMirror a {
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+        
+        .ProseMirror a:hover {
+          color: #1d4ed8;
+          text-decoration: underline;
+        }
+        
+        /* Video spacing - tam genişlik */
+        .ProseMirror .video-embed {
+          margin: 1.5rem 0;
+          clear: both;
+          width: 100%;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        /* Video iframe - tam genişlik */
+        .ProseMirror .video-embed iframe {
+          width: 100% !important;
+          height: 400px;
+          pointer-events: auto;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        /* Video container hover - sadece hafif outline */
+        .ProseMirror .video-embed:hover {
+          outline: 1px solid #e5e7eb;
+          border-radius: 4px;
+        }
+        
+        /* Video seçili değilken */
+        .ProseMirror .video-embed:not(.ProseMirror-selectednode) {
+          outline: none;
+        }
+        
+        /* Video seçimini engelle */
+        .ProseMirror .video-embed {
+          cursor: default;
+        }
+        
+        .ProseMirror .video-embed:hover {
+          cursor: default;
+        }
+        
+        /* Video seçimini engelle */
+        .ProseMirror .video-embed * {
+          pointer-events: none;
+        }
+        
+        /* Image spacing */
+        .ProseMirror img {
+          margin: 1rem 0;
+          clear: both;
+        }
+        
+        /* Paragraph spacing */
+        .ProseMirror p {
+          margin: 0.75rem 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        
+        /* Heading spacing */
+        .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, 
+        .ProseMirror h4, .ProseMirror h5, .ProseMirror h6 {
+          margin: 1.5rem 0 0.75rem 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        
+        /* Text content whitespace handling */
+        .ProseMirror .text {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+        
+        /* List items whitespace */
+        .ProseMirror li {
+          white-space: pre-wrap;
+          word-wrap: break-word;
         }
         
         /* Base styles for ProseMirror */
