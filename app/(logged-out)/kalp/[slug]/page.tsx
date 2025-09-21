@@ -165,7 +165,7 @@ export default function KalpDetailPage() {
 											)}
 											<div className="p-6">
 												{section.title && (
-													<h4 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h4>
+													<h6 className="text-sm font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h6>
 												)}
 												{section.description && section.description.trim() && (
 													<div 
