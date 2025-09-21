@@ -1,1 +1,1 @@
-export const server: string ="http://localhost:3040/v1";
+export const server: string ="https://nilated-server-e09f165546d9.herokuapp.com/v1";
