@@ -1323,13 +1323,6 @@ export default function KalpEditor() {
                   placeholder="e.g. Technology, Health, Business"
                 />
                 
-                {/* Debug info - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
-                    Debug: Current blogCategory = "{additionalSectionItem.blogCategory}"
-                  </div>
-                )}
-                
                 {/* Available categories */}
                 {categories && categories.length > 0 && (
                   <div className="space-y-1">
