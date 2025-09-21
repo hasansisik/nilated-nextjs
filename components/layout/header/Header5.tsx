@@ -123,22 +123,22 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 					}}
 				>
 					<div className="container-fluid px-lg-8">
-						<Link className="navbar-brand d-flex main-logo align-items-center gap-3" href="/">
+						<Link className="navbar-brand d-flex main-logo align-items-center gap-2" href="/">
 							<img 
 								src={header.logo.src} 
 								alt={header.logo.alt} 
 								style={{ 
-									maxWidth: '40px', 
-									maxHeight: '40px', 
+									maxWidth: '60px', 
+									maxHeight: '60px', 
 									width: 'auto', 
 									height: 'auto', 
 									objectFit: 'contain',
 								}} 
 							/>
-							<span>{header.logo.text}</span>
+							<span style={{ fontSize: '1.2rem', fontWeight: '600' }}>{header.logo.text}</span>
 						</Link>
 						<Menu menuItems={header.mainMenu} dropdownMenus={header.dropdownMenus} />
-						<div className="d-flex align-items-center pe-5 pe-lg-0 me-5 me-lg-0">
+						<div className="d-flex align-items-center pe-2 pe-lg-0 me-2">
 							<div className="d-lg-flex align-items-center pe-8 d-none">
 								{header.topBarItems && header.topBarItems.map((item: any, index: number) => {
 									if (item.name === "Phone" && item.content) {
@@ -192,10 +192,13 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 									{header.showActionButton && (
 										<Link 
 											href={header.links.freeTrialLink.href} 
-											className="btn d-none d-md-block ms-2 "
+											className="btn d-none d-md-block ms-2 btn-sm"
 											style={{
 												backgroundColor: header.buttonColor || "#3b71fe",
-												color: header.buttonTextColor || "#ffffff"
+												color: header.buttonTextColor || "#ffffff",
+												padding: "0.375rem 0.75rem",
+												fontSize: "0.875rem",
+												lineHeight: "1.25rem"
 											}}
 										>
 											{header.links.freeTrialLink.text}
@@ -206,11 +209,16 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 									{header.showSecondActionButton && (
 										<Link 
 											href={header.secondActionButtonLink || header.links?.secondActionButton?.href || "/register"} 
-											className="btn d-none d-md-block ms-2 "
+											className="btn d-none d-md-block ms-2 btn-sm"
 											style={{
 												backgroundColor: header.secondButtonColor || "#ffffff",
 												color: header.secondButtonTextColor || "#3b71fe",
-												border: `1px solid ${header.secondButtonBorderColor || "#3b71fe"}`
+												border: `1px solid ${header.secondButtonBorderColor || "#3b71fe"}`,
+												padding: "0.375rem 0.75rem",
+												fontSize: "0.875rem",
+												lineHeight: "1.25rem",
+												whiteSpace: "nowrap",
+												minWidth: "fit-content"
 											}}
 										>
 											{header.secondActionButtonText || header.links?.secondActionButton?.text || "Kayıt Ol"}
@@ -220,13 +228,20 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 								</>
 							)}
 							<div 
-								className="burger-icon burger-icon-white border rounded-3" 
+								className="border rounded-3 d-flex flex-column align-items-center justify-content-center d-lg-none" 
 								onClick={handleMobileMenu}
-								style={{ backgroundColor: header.mobileMenuButtonColor || 'transparent' }}
+								style={{ 
+									backgroundColor: '#3b71fe',
+									width: '40px',
+									height: '40px',
+									cursor: 'pointer'
+								}}
 							>
-								<span className="burger-icon-top" />
-								<span className="burger-icon-mid" />
-								<span className="burger-icon-bottom" />
+								<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+									<div style={{ width: '20px', height: '2px', backgroundColor: 'white', margin: '2px 0', borderRadius: '1px' }}></div>
+									<div style={{ width: '20px', height: '2px', backgroundColor: 'white', margin: '2px 0', borderRadius: '1px' }}></div>
+									<div style={{ width: '20px', height: '2px', backgroundColor: 'white', margin: '2px 0', borderRadius: '1px' }}></div>
+								</div>
 							</div>
 						</div>
 					</div>

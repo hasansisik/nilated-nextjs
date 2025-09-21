@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
 import { getHeader } from '@/redux/actions/headerActions'
+import { getMyProfile } from '@/redux/actions/userActions'
+import { User } from 'lucide-react'
 
 interface DropdownChild {
   _id: string;
@@ -32,12 +34,14 @@ export default function MobileMenu({ isMobileMenu, handleMobileMenu, menuItems =
 	const [isDropdownOpen, setIsDropdownOpen] = useState<string | null>(null)
 	const dispatch = useDispatch()
 	const { header } = useSelector((state: RootState) => state.header)
+	const { user } = useSelector((state: RootState) => state.user)
 
 	// Fetch header data once when component mounts if not already available
 	useEffect(() => {
 		if (!header || !header.mainMenu) {
 			dispatch(getHeader() as any)
 		}
+		dispatch(getMyProfile() as any)
 	}, [])
 
 	const handleAccordion = (key: number) => {
@@ -229,6 +233,82 @@ export default function MobileMenu({ isMobileMenu, handleMobileMenu, menuItems =
 										))}
 									</ul>
 								</nav>
+								
+								{/* Mobile Action Buttons */}
+								<div className="mobile-action-buttons mt-4 px-3 d-flex flex-column align-items-center">
+									{user?._id ? (
+										/* Kullanıcı giriş yapmışsa profil butonu göster */
+										<Link 
+											href="/profile" 
+											className="btn btn-outline-primary btn-sm mb-2 d-flex align-items-center justify-content-center"
+											onClick={handleMenuItemClick}
+											style={{ width: '200px', fontSize: '0.875rem', padding: '0.375rem 0.75rem' }}
+										>
+											<User size={16} className="me-2" />
+											Profil
+										</Link>
+									) : (
+										/* Kullanıcı giriş yapmamışsa action button'ları göster */
+										<>
+											{header?.showActionButton && (
+												<Link 
+													href={header?.links?.freeTrialLink?.href || "/login"} 
+													className="btn btn-primary btn-sm mb-2"
+													onClick={handleMenuItemClick}
+													style={{
+														backgroundColor: header?.buttonColor || "#3b71fe",
+														color: header?.buttonTextColor || "#ffffff",
+														border: `1px solid ${header?.buttonColor || "#3b71fe"}`,
+														width: '200px',
+														fontSize: '0.875rem',
+														padding: '0.375rem 0.75rem',
+														transition: 'all 0.3s ease'
+													}}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.backgroundColor = "transparent";
+														e.currentTarget.style.color = header?.buttonColor || "#3b71fe";
+														e.currentTarget.style.borderColor = header?.buttonColor || "#3b71fe";
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.backgroundColor = header?.buttonColor || "#3b71fe";
+														e.currentTarget.style.color = header?.buttonTextColor || "#ffffff";
+														e.currentTarget.style.borderColor = header?.buttonColor || "#3b71fe";
+													}}
+												>
+													{header?.links?.freeTrialLink?.text || "Giriş"}
+												</Link>
+											)}
+											
+											{header?.showSecondActionButton && (
+												<Link 
+													href={header?.secondActionButtonLink || header?.links?.secondActionButton?.href || "/register"} 
+													className="btn btn-outline-primary btn-sm"
+													onClick={handleMenuItemClick}
+													style={{
+														color: header?.secondButtonTextColor || "#3b71fe",
+														borderColor: header?.secondButtonBorderColor || "#3b71fe",
+														width: '200px',
+														fontSize: '0.875rem',
+														padding: '0.375rem 0.75rem',
+														transition: 'all 0.3s ease'
+													}}
+													onMouseEnter={(e) => {
+														e.currentTarget.style.backgroundColor = header?.buttonColor || "#3b71fe";
+														e.currentTarget.style.color = "#ffffff";
+														e.currentTarget.style.borderColor = header?.buttonColor || "#3b71fe";
+													}}
+													onMouseLeave={(e) => {
+														e.currentTarget.style.backgroundColor = "transparent";
+														e.currentTarget.style.color = header?.secondButtonTextColor || "#3b71fe";
+														e.currentTarget.style.borderColor = header?.secondButtonBorderColor || "#3b71fe";
+													}}
+												>
+													{header?.secondActionButtonText || header?.links?.secondActionButton?.text || "Kayıt Ol"}
+												</Link>
+											)}
+										</>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>

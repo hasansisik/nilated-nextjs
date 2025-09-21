@@ -48,7 +48,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
   if (menuItems) {
     return (
       <div className="d-none d-lg-flex">
-        <ul className="navbar-nav mx-auto" style={{ gap: '0.125rem' }}>
+        <ul className="navbar-nav mx-auto" style={{ gap: '0.5rem', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
           {(data?.map((item: MenuItem) => (
             <li key={item._id || `menu-item-${item.name}`} className="nav-item">
               <Link
@@ -95,7 +95,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
   return (
     <>
       <div className="d-none d-lg-flex">
-        <ul className="navbar-nav mx-auto" style={{ gap: '0.125rem' }}>
+        <ul className="navbar-nav mx-auto" style={{ gap: '0.5rem', flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
           {data?.map((item: any, index: number) => (
             <li
               key={`menu-item-${item?.title || index}`}
