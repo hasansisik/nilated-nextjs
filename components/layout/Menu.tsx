@@ -48,11 +48,11 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
   if (menuItems) {
     return (
       <div className="d-none d-lg-flex">
-        <ul className="navbar-nav mx-auto gap-4 align-items-lg-center">
+        <ul className="navbar-nav mx-auto" style={{ gap: '0.125rem' }}>
           {(data?.map((item: MenuItem) => (
             <li key={item._id || `menu-item-${item.name}`} className="nav-item">
               <Link
-                className="nav-link fw-bold d-flex align-items-center"
+                className="nav-link fw-bold d-flex align-items-center fs-7"
                 href={item.link || "#"}
               >
                 {item.name}
@@ -64,7 +64,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
           {dropdownMenus?.map((dropdown: DropdownMenu) => (
             <li key={dropdown._id} className="nav-item dropdown">
               <Link
-                className="nav-link fw-bold d-flex align-items-center dropdown-toggle"
+                className="nav-link fw-bold d-flex align-items-center dropdown-toggle fs-7"
                 href="#"
                 role="button"
                 data-bs-toggle="dropdown"
@@ -95,7 +95,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
   return (
     <>
       <div className="d-none d-lg-flex">
-        <ul className="navbar-nav mx-auto gap-4 align-items-lg-center">
+        <ul className="navbar-nav mx-auto" style={{ gap: '0.125rem' }}>
           {data?.map((item: any, index: number) => (
             <li
               key={`menu-item-${item?.title || index}`}
@@ -104,7 +104,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
               }`}
             >
               <Link
-                className="nav-link fw-bold d-flex align-items-center"
+                className="nav-link fw-bold d-flex align-items-center fs-7"
                 href={item?.href || "#"}
                 role={item?.dropdown ? "button" : undefined}
                 data-bs-toggle={item?.dropdown ? "dropdown" : undefined}
@@ -130,7 +130,7 @@ export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) 
                               {dropdownItem?.icon &&
                                 getMenuIconByName(dropdownItem.icon)}
                               <span className="ms-2">
-                                <span className="d-block fw-bold fs-6">
+                                <span className="d-block fw-bold fs-7">
                                   {dropdownItem?.title || ""}
                                 </span>
                                 {dropdownItem?.subtitle && (
