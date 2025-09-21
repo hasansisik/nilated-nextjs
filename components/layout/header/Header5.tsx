@@ -137,7 +137,7 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 							/>
 							<span>{header.logo.text}</span>
 						</Link>
-						<Menu menuItems={header.mainMenu} />
+						<Menu menuItems={header.mainMenu} dropdownMenus={header.dropdownMenus} />
 						<div className="d-flex align-items-center pe-5 pe-lg-0 me-5 me-lg-0">
 							<div className="d-lg-flex align-items-center pe-8 d-none">
 								{header.topBarItems && header.topBarItems.map((item: any, index: number) => {
@@ -238,6 +238,7 @@ export default function Header5({ scroll, hideHeader, isMobileMenu, handleMobile
 					handleMobileMenu={handleMobileMenu} 
 					isMobileMenu={isMobileMenu} 
 					menuItems={header.mainMenu}
+					dropdownMenus={header.dropdownMenus}
 					socialLinks={header.socialLinks} 
 				/>
 			</header>

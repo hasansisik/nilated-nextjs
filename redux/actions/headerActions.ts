@@ -24,6 +24,17 @@ export interface HeaderPayload {
     link: string;
     order: number;
   }>;
+  dropdownMenus?: Array<{
+    _id: string;
+    title: string;
+    children: Array<{
+      _id: string;
+      title: string;
+      link: string;
+      order: number;
+    }>;
+    order: number;
+  }>;
   socialLinks?: Array<any>;
   topBarItems?: Array<any>;
   showDarkModeToggle?: boolean;

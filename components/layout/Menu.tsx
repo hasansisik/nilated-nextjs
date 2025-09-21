@@ -10,11 +10,26 @@ interface MenuItem {
   order: number;
 }
 
-interface MenuProps {
-  menuItems?: MenuItem[];
+interface DropdownChild {
+  _id: string;
+  title: string;
+  link: string;
+  order: number;
 }
 
-export default function Menu({ menuItems = [] }: MenuProps) {
+interface DropdownMenu {
+  _id: string;
+  title: string;
+  children: DropdownChild[];
+  order: number;
+}
+
+interface MenuProps {
+  menuItems?: MenuItem[];
+  dropdownMenus?: DropdownMenu[];
+}
+
+export default function Menu({ menuItems = [], dropdownMenus = [] }: MenuProps) {
   const [data, setData] = useState<any>(
     menuItems.length > 0 ? menuItems : menuData.mainMenuItems || []
   );
@@ -44,6 +59,33 @@ export default function Menu({ menuItems = [] }: MenuProps) {
               </Link>
             </li>
           ))) || []}
+          
+          {/* Dropdown Menus */}
+          {dropdownMenus?.map((dropdown: DropdownMenu) => (
+            <li key={dropdown._id} className="nav-item dropdown">
+              <Link
+                className="nav-link fw-bold d-flex align-items-center dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                {dropdown.title}
+              </Link>
+              <ul className="dropdown-menu">
+                {dropdown.children?.map((child: DropdownChild) => (
+                  <li key={child._id}>
+                    <Link
+                      className="dropdown-item"
+                      href={child.link || "#"}
+                    >
+                      {child.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
         </ul>
       </div>
     );

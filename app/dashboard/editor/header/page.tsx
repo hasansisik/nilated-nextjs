@@ -70,6 +70,20 @@ interface MenuItem {
   order: number;
 }
 
+interface DropdownChild {
+  _id: string;
+  title: string;
+  link: string;
+  order: number;
+}
+
+interface DropdownMenu {
+  _id: string;
+  title: string;
+  children: DropdownChild[];
+  order: number;
+}
+
 interface TopBarItem {
   _id: string;
   name: string;
@@ -79,6 +93,7 @@ interface TopBarItem {
 
 interface HeaderData {
   mainMenu: MenuItem[];
+  dropdownMenus: DropdownMenu[];
   socialLinks: MenuItem[];
   topBarItems: TopBarItem[];
   logoText: string;
@@ -140,11 +155,13 @@ interface HeaderEditorContentProps {
   setHeaderData: (data: HeaderData) => void;
   handleItemAdd: (e: React.FormEvent) => void;
   handleItemDelete: (itemId: string, type: string) => void;
-  handleItemsReorder: (updatedItems: MenuItem[] | TopBarItem[], type: string) => void;
+  handleItemsReorder: (updatedItems: MenuItem[] | TopBarItem[] | DropdownMenu[], type: string) => void;
   handleEditItem: (itemId: string, type: string) => void;
   handleUpdateItem: (e: React.FormEvent) => void;
   menuDialogOpen: boolean;
   setMenuDialogOpen: (open: boolean) => void;
+  dropdownDialogOpen: boolean;
+  setDropdownDialogOpen: (open: boolean) => void;
   topBarDialogOpen: boolean;
   setTopBarDialogOpen: (open: boolean) => void;
   socialDialogOpen: boolean;
@@ -159,6 +176,7 @@ interface HeaderEditorContentProps {
   };
   setNewItem: (item: { name: string; link: string; content: string; type: string }) => void;
   sortedMainMenu: MenuItem[];
+  sortedDropdownMenus: DropdownMenu[];
   sortedSocialLinks: MenuItem[];
   sortedTopBarItems: TopBarItem[];
   editDialogOpen: boolean;
@@ -174,6 +192,30 @@ interface HeaderEditorContentProps {
   handleSaveChanges: () => void;
   saveChangesToAPI: (data: any) => Promise<void>;
   dispatch: any;
+  // Dropdown menu specific props
+  newDropdownItem: {
+    title: string;
+    children: DropdownChild[];
+  };
+  setNewDropdownItem: (item: { title: string; children: DropdownChild[] }) => void;
+  newChildItem: {
+    title: string;
+    link: string;
+  };
+  setNewChildItem: (item: { title: string; link: string }) => void;
+  handleDropdownAdd: (e: React.FormEvent) => void;
+  handleChildAdd: (dropdownId: string) => void;
+  handleChildDelete: (dropdownId: string, childId: string) => void;
+  handleDropdownEdit: (dropdownId: string) => void;
+  handleDropdownUpdate: (e: React.FormEvent) => void;
+  handleChildEdit: (dropdownId: string, childId: string) => void;
+  handleChildUpdate: (e: React.FormEvent) => void;
+  editDropdownDialogOpen: boolean;
+  setEditDropdownDialogOpen: (open: boolean) => void;
+  editingDropdown: DropdownMenu | null;
+  setEditingDropdown: (dropdown: DropdownMenu | null) => void;
+  editingChild: DropdownChild | null;
+  setEditingChild: (child: DropdownChild | null) => void;
 }
 
 export default function HeaderEditor() {
@@ -183,6 +225,7 @@ export default function HeaderEditor() {
   const [selectedHeader, setSelectedHeader] = useState<number | null>(null);
   const [headerData, setHeaderData] = useState<HeaderData>({
     mainMenu: [],
+    dropdownMenus: [],
     socialLinks: [],
     topBarItems: [],
     logoText: "Infinia",
@@ -210,6 +253,7 @@ export default function HeaderEditor() {
   const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
   const [menuDialogOpen, setMenuDialogOpen] = useState(false);
+  const [dropdownDialogOpen, setDropdownDialogOpen] = useState(false);
   const [topBarDialogOpen, setTopBarDialogOpen] = useState(false);
   const [socialDialogOpen, setSocialDialogOpen] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -227,6 +271,21 @@ export default function HeaderEditor() {
     content: "",
     type: "mainMenu",
   });
+  
+  const [newDropdownItem, setNewDropdownItem] = useState({
+    title: "",
+    children: [] as DropdownChild[],
+  });
+  
+  const [newChildItem, setNewChildItem] = useState({
+    title: "",
+    link: "",
+  });
+  
+  const [editingDropdownId, setEditingDropdownId] = useState<string | null>(null);
+  const [editDropdownDialogOpen, setEditDropdownDialogOpen] = useState(false);
+  const [editingDropdown, setEditingDropdown] = useState<DropdownMenu | null>(null);
+  const [editingChild, setEditingChild] = useState<DropdownChild | null>(null);
 
   const headers = [
     {
@@ -299,6 +358,7 @@ export default function HeaderEditor() {
         { _id: "4", name: "Blog", link: "/blog", order: 3 },
         { _id: "5", name: "Contact", link: "/contact", order: 4 },
       ],
+      dropdownMenus: [],
       socialLinks: selectedHeader === 5 ? [
         {
           _id: "1",
@@ -354,6 +414,7 @@ export default function HeaderEditor() {
     if (header) {
       const updatedData = {
         mainMenu: Array.isArray(header.mainMenu) ? header.mainMenu : initialData.mainMenu,
+        dropdownMenus: Array.isArray(header.dropdownMenus) ? header.dropdownMenus : initialData.dropdownMenus,
         socialLinks: Array.isArray(header.socialLinks) ? header.socialLinks : initialData.socialLinks,
         topBarItems: Array.isArray(header.topBarItems) ? header.topBarItems : initialData.topBarItems,
         logoText: header.logo?.text || initialData.logoText,
@@ -437,6 +498,184 @@ export default function HeaderEditor() {
     }
   };
 
+  // Handle dropdown menu creation
+  const handleDropdownAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newDropdownItem.title) {
+      showErrorAlert("Please fill in dropdown title");
+      return;
+    }
+
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newOrder = headerData.dropdownMenus.length;
+    
+    const newDropdownMenu: DropdownMenu = {
+      _id: newId,
+      title: newDropdownItem.title,
+      children: newDropdownItem.children,
+      order: newOrder,
+    };
+
+    const updatedData = {
+      ...headerData,
+      dropdownMenus: [...headerData.dropdownMenus, newDropdownMenu],
+    };
+
+    setHeaderData(updatedData);
+    saveChangesToAPI(updatedData);
+    
+    setNewDropdownItem({
+      title: "",
+      children: [],
+    });
+    
+    setDropdownDialogOpen(false);
+    showSuccessAlert("Dropdown menu added successfully");
+  };
+
+  // Handle child item addition to dropdown
+  const handleChildAdd = (dropdownId: string) => {
+    if (!newChildItem.title || !newChildItem.link) {
+      showErrorAlert("Please fill in all fields");
+      return;
+    }
+
+    const newId = Math.random().toString(36).substr(2, 9);
+    const dropdown = headerData.dropdownMenus.find(d => d._id === dropdownId);
+    
+    if (!dropdown) return;
+
+    const newChild: DropdownChild = {
+      _id: newId,
+      title: newChildItem.title,
+      link: newChildItem.link,
+      order: dropdown.children.length,
+    };
+
+    const updatedDropdowns = headerData.dropdownMenus.map(d => 
+      d._id === dropdownId 
+        ? { ...d, children: [...d.children, newChild] }
+        : d
+    );
+
+    const updatedData = {
+      ...headerData,
+      dropdownMenus: updatedDropdowns,
+    };
+
+    setHeaderData(updatedData);
+    saveChangesToAPI(updatedData);
+    
+    setNewChildItem({
+      title: "",
+      link: "",
+    });
+    
+    showSuccessAlert("Child item added successfully");
+  };
+
+  // Handle child item deletion
+  const handleChildDelete = (dropdownId: string, childId: string) => {
+    const updatedDropdowns = headerData.dropdownMenus.map(d => 
+      d._id === dropdownId 
+        ? { 
+            ...d, 
+            children: d.children
+              .filter(c => c._id !== childId)
+              .map((c, index) => ({ ...c, order: index }))
+          }
+        : d
+    );
+
+    const updatedData = {
+      ...headerData,
+      dropdownMenus: updatedDropdowns,
+    };
+
+    setHeaderData(updatedData);
+    saveChangesToAPI(updatedData);
+    showSuccessAlert("Child item deleted successfully");
+  };
+
+  // Handle dropdown menu edit
+  const handleDropdownEdit = (dropdownId: string) => {
+    const dropdown = headerData.dropdownMenus.find(d => d._id === dropdownId);
+    if (dropdown) {
+      setEditingDropdown(dropdown);
+      setEditDropdownDialogOpen(true);
+    }
+  };
+
+  // Handle dropdown menu update
+  const handleDropdownUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingDropdown) return;
+
+    const updatedDropdowns = headerData.dropdownMenus.map(d => 
+      d._id === editingDropdown._id 
+        ? { ...editingDropdown }
+        : d
+    );
+
+    const updatedData = {
+      ...headerData,
+      dropdownMenus: updatedDropdowns,
+    };
+
+    setHeaderData(updatedData);
+    saveChangesToAPI(updatedData);
+    
+    setEditingDropdown(null);
+    setEditDropdownDialogOpen(false);
+    showSuccessAlert("Dropdown menu updated successfully");
+  };
+
+  // Handle child item edit
+  const handleChildEdit = (dropdownId: string, childId: string) => {
+    const dropdown = headerData.dropdownMenus.find(d => d._id === dropdownId);
+    if (dropdown) {
+      const child = dropdown.children.find(c => c._id === childId);
+      if (child) {
+        setEditingChild(child);
+        setEditingDropdownId(dropdownId);
+      }
+    }
+  };
+
+  // Handle child item update
+  const handleChildUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingChild || !editingDropdownId) return;
+
+    const updatedDropdowns = headerData.dropdownMenus.map(d => 
+      d._id === editingDropdownId 
+        ? { 
+            ...d, 
+            children: d.children.map(c => 
+              c._id === editingChild._id 
+                ? { ...editingChild }
+                : c
+            )
+          }
+        : d
+    );
+
+    const updatedData = {
+      ...headerData,
+      dropdownMenus: updatedDropdowns,
+    };
+
+    setHeaderData(updatedData);
+    saveChangesToAPI(updatedData);
+    
+    setEditingChild(null);
+    setEditingDropdownId(null);
+    showSuccessAlert("Child item updated successfully");
+  };
+
   const handleItemAdd = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -493,6 +732,22 @@ export default function HeaderEditor() {
         ...headerData,
         topBarItems: newTopBarItems,
       };
+    } else if (newItem.type === "dropdownMenus") {
+      const newOrder = headerData.dropdownMenus.length;
+      const newDropdownMenus = [
+        ...headerData.dropdownMenus,
+        {
+          _id: newId,
+          title: newItem.name,
+          children: [],
+          order: newOrder,
+        },
+      ];
+
+      updatedData = {
+        ...headerData,
+        dropdownMenus: newDropdownMenus,
+      };
     }
 
     // Update state with new data
@@ -510,10 +765,11 @@ export default function HeaderEditor() {
 
     // Close dialogs
     setMenuDialogOpen(false);
+    setDropdownDialogOpen(false);
     setSocialDialogOpen(false);
     setTopBarDialogOpen(false);
 
-    showSuccessAlert(`New ${newItem.type === "mainMenu" ? "menu item" : newItem.type === "socialLinks" ? "social link" : "top bar item"} added successfully`);
+    showSuccessAlert(`New ${newItem.type === "mainMenu" ? "menu item" : newItem.type === "socialLinks" ? "social link" : newItem.type === "dropdownMenus" ? "dropdown menu" : "top bar item"} added successfully`);
   };
 
   const handleItemDelete = (itemId: string, type: string) => {
@@ -570,6 +826,23 @@ export default function HeaderEditor() {
       };
 
       showSuccessAlert("Top bar item deleted successfully");
+    } else if (type === "dropdownMenus") {
+      const updatedDropdownMenus = headerData.dropdownMenus.filter(
+        (item) => item._id !== itemId
+      );
+      
+      // Re-calculate order values
+      const reorderedDropdownMenus = updatedDropdownMenus.map((item, index) => ({
+        ...item,
+        order: index
+      }));
+      
+      updatedData = {
+        ...headerData,
+        dropdownMenus: reorderedDropdownMenus,
+      };
+
+      showSuccessAlert("Dropdown menu deleted successfully");
     }
 
     // Update state
@@ -580,7 +853,7 @@ export default function HeaderEditor() {
   };
 
   const handleItemsReorder = (
-    updatedItems: MenuItem[] | TopBarItem[],
+    updatedItems: MenuItem[] | TopBarItem[] | DropdownMenu[],
     type: string
   ) => {
     // Ensure the updatedItems have their order values set correctly
@@ -609,6 +882,12 @@ export default function HeaderEditor() {
         topBarItems: itemsWithUpdatedOrder as TopBarItem[],
       };
       showSuccessAlert("Top bar items reordered successfully");
+    } else if (type === "dropdownMenus") {
+      updatedData = {
+        ...headerData,
+        dropdownMenus: itemsWithUpdatedOrder as DropdownMenu[],
+      };
+      showSuccessAlert("Dropdown menus reordered successfully");
     }
 
     // Update state
@@ -619,6 +898,11 @@ export default function HeaderEditor() {
   };
 
   const handleEditItem = (itemId: string, type: string) => {
+    if (type === "dropdownMenus") {
+      handleDropdownEdit(itemId);
+      return;
+    }
+
     let itemToEdit;
 
     if (type === "mainMenu") {
@@ -765,6 +1049,7 @@ export default function HeaderEditor() {
     const updatedHeaderData = {
       // These should come from the API via Redux
       mainMenu: Array.isArray(header.mainMenu) ? header.mainMenu : [],
+      dropdownMenus: Array.isArray(header.dropdownMenus) ? header.dropdownMenus : [],
       socialLinks: Array.isArray(header.socialLinks) ? header.socialLinks : [],
       topBarItems: Array.isArray(header.topBarItems) ? header.topBarItems : [],
           
@@ -844,6 +1129,7 @@ export default function HeaderEditor() {
           }
         },
         mainMenu: data.mainMenu || headerData.mainMenu,
+        dropdownMenus: data.dropdownMenus || headerData.dropdownMenus,
         socialLinks: data.socialLinks || headerData.socialLinks,
         topBarItems: data.topBarItems || headerData.topBarItems,
         showDarkModeToggle: typeof data.showDarkModeToggle === 'boolean' ? data.showDarkModeToggle : headerData.showDarkModeToggle,
@@ -940,6 +1226,7 @@ export default function HeaderEditor() {
           }
         },
         mainMenu: headerData.mainMenu,
+        dropdownMenus: headerData.dropdownMenus,
         socialLinks: headerData.socialLinks,
         topBarItems: headerData.topBarItems,
         showDarkModeToggle: headerData.showDarkModeToggle,
@@ -1023,6 +1310,12 @@ export default function HeaderEditor() {
       )
     : [];
 
+  const sortedDropdownMenus = headerData?.dropdownMenus
+    ? [...headerData.dropdownMenus].sort(
+        (a, b) => (a.order || 0) - (b.order || 0)
+      )
+    : [];
+
   // Function to refresh the iframe preview
   const refreshIframePreview = () => {
     const iframe = document.querySelector('iframe');
@@ -1083,6 +1376,8 @@ export default function HeaderEditor() {
           handleUpdateItem={handleUpdateItem}
           menuDialogOpen={menuDialogOpen}
           setMenuDialogOpen={setMenuDialogOpen}
+          dropdownDialogOpen={dropdownDialogOpen}
+          setDropdownDialogOpen={setDropdownDialogOpen}
           topBarDialogOpen={topBarDialogOpen}
           setTopBarDialogOpen={setTopBarDialogOpen}
           socialDialogOpen={socialDialogOpen}
@@ -1092,6 +1387,7 @@ export default function HeaderEditor() {
           newItem={newItem}
           setNewItem={setNewItem}
           sortedMainMenu={sortedMainMenu}
+          sortedDropdownMenus={sortedDropdownMenus}
           sortedSocialLinks={sortedSocialLinks}
           sortedTopBarItems={sortedTopBarItems}
           editDialogOpen={editDialogOpen}
@@ -1101,6 +1397,23 @@ export default function HeaderEditor() {
           handleSaveChanges={handleSaveChanges}
           saveChangesToAPI={saveChangesToAPI}
           dispatch={dispatch}
+          newDropdownItem={newDropdownItem}
+          setNewDropdownItem={setNewDropdownItem}
+          newChildItem={newChildItem}
+          setNewChildItem={setNewChildItem}
+          handleDropdownAdd={handleDropdownAdd}
+          handleChildAdd={handleChildAdd}
+          handleChildDelete={handleChildDelete}
+          handleDropdownEdit={handleDropdownEdit}
+          handleDropdownUpdate={handleDropdownUpdate}
+          handleChildEdit={handleChildEdit}
+          handleChildUpdate={handleChildUpdate}
+          editDropdownDialogOpen={editDropdownDialogOpen}
+          setEditDropdownDialogOpen={setEditDropdownDialogOpen}
+          editingDropdown={editingDropdown}
+          setEditingDropdown={setEditingDropdown}
+          editingChild={editingChild}
+          setEditingChild={setEditingChild}
         />
       </EditorProvider>
       
@@ -1250,6 +1563,8 @@ function HeaderEditorContent({
   handleUpdateItem,
   menuDialogOpen,
   setMenuDialogOpen,
+  dropdownDialogOpen,
+  setDropdownDialogOpen,
   topBarDialogOpen,
   setTopBarDialogOpen,
   socialDialogOpen,
@@ -1259,6 +1574,7 @@ function HeaderEditorContent({
   newItem,
   setNewItem,
   sortedMainMenu,
+  sortedDropdownMenus,
   sortedSocialLinks,
   sortedTopBarItems,
   editDialogOpen,
@@ -1268,6 +1584,23 @@ function HeaderEditorContent({
   handleSaveChanges,
   saveChangesToAPI,
   dispatch,
+  newDropdownItem,
+  setNewDropdownItem,
+  newChildItem,
+  setNewChildItem,
+  handleDropdownAdd,
+  handleChildAdd,
+  handleChildDelete,
+  handleDropdownEdit,
+  handleDropdownUpdate,
+  handleChildEdit,
+  handleChildUpdate,
+  editDropdownDialogOpen,
+  setEditDropdownDialogOpen,
+  editingDropdown,
+  setEditingDropdown,
+  editingChild,
+  setEditingChild,
 }: HeaderEditorContentProps) {
   const router = useRouter();
 
@@ -1404,6 +1737,76 @@ function HeaderEditorContent({
                   ) : (
                     <div className="text-center py-4 text-gray-500 text-xs bg-sidebar rounded-md">
                       No menu items yet.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Dropdown Menus</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="mb-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs font-normal"
+                    onClick={() => setDropdownDialogOpen(true)}
+                  >
+                    + Add Dropdown Menu
+                  </Button>
+                </div>
+                <div className="mt-2">
+                  {sortedDropdownMenus.length > 0 ? (
+                    <SortableList
+                      items={sortedDropdownMenus}
+                      onChange={(updatedItems: DropdownMenu[]) =>
+                        handleItemsReorder(updatedItems, "dropdownMenus")
+                      }
+                      onDelete={(itemId: string) =>
+                        handleItemDelete(itemId, "dropdownMenus")
+                      }
+                      onEdit={(itemId: string) =>
+                        handleEditItem(itemId, "dropdownMenus")
+                      }
+                      renderItem={(item: DropdownMenu) => (
+                        <div className="w-full px-2">
+                          <div className="flex justify-between items-center">
+                            <div className="font-medium text-xs">
+                              {item.title}
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              {item.children?.length || 0} items
+                            </div>
+                          </div>
+                          {item.children && item.children.length > 0 && (
+                            <div className="mt-1 space-y-1">
+                              {item.children.map((child, index) => (
+                                <div key={child._id || index} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1">
+                                  <div className="text-xs text-gray-600">
+                                    {child.title} ({child.link})
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleChildDelete(item._id, child._id)}
+                                    className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-xs bg-sidebar rounded-md">
+                      No dropdown menus yet.
                     </div>
                   )}
                 </div>
@@ -2268,6 +2671,246 @@ function HeaderEditorContent({
         </DialogContent>
       </Dialog>
       
+      {/* Add Dropdown Menu Dialog */}
+      <Dialog open={dropdownDialogOpen} onOpenChange={setDropdownDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">New Dropdown Menu</DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-1">
+              Add a new dropdown menu with title and child items.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleDropdownAdd} className="space-y-4 mt-3">
+            <div className="space-y-2">
+              <Label htmlFor="dropdownTitle" className="text-sm">Dropdown Title</Label>
+              <Input
+                id="dropdownTitle"
+                value={newDropdownItem.title}
+                onChange={(e) => setNewDropdownItem({ ...newDropdownItem, title: e.target.value })}
+                placeholder="e.g. Services"
+                className="h-9 text-sm"
+              />
+            </div>
+            
+            {/* Children Items Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Child Items</Label>
+              <div className="space-y-2">
+                {newDropdownItem.children.map((child, index) => (
+                  <div key={child._id || index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <span className="text-sm font-medium">{child.title}</span>
+                    <span className="text-xs text-gray-500">({child.link})</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNewDropdownItem({
+                          ...newDropdownItem,
+                          children: newDropdownItem.children.filter((_, i) => i !== index)
+                        });
+                      }}
+                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Add Child Item Form */}
+              <div className="flex gap-2">
+                <Input
+                  value={newChildItem.title}
+                  onChange={(e) => setNewChildItem({ ...newChildItem, title: e.target.value })}
+                  placeholder="Child title"
+                  className="h-8 text-sm"
+                />
+                <Input
+                  value={newChildItem.link}
+                  onChange={(e) => setNewChildItem({ ...newChildItem, link: e.target.value })}
+                  placeholder="Child link"
+                  className="h-8 text-sm"
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (newChildItem.title && newChildItem.link) {
+                      const newId = Math.random().toString(36).substr(2, 9);
+                      setNewDropdownItem({
+                        ...newDropdownItem,
+                        children: [
+                          ...newDropdownItem.children,
+                          {
+                            _id: newId,
+                            title: newChildItem.title,
+                            link: newChildItem.link,
+                            order: newDropdownItem.children.length
+                          }
+                        ]
+                      });
+                      setNewChildItem({ title: "", link: "" });
+                    }
+                  }}
+                  className="h-8 px-3 text-xs"
+                  disabled={!newChildItem.title || !newChildItem.link}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                type="submit" 
+                className="flex-1 text-sm"
+                disabled={!newDropdownItem.title}
+              >
+                Create Dropdown Menu
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setDropdownDialogOpen(false)}
+                className="flex-1 text-sm"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dropdown Menu Dialog */}
+      <Dialog open={editDropdownDialogOpen} onOpenChange={setEditDropdownDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Edit Dropdown Menu</DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-1">
+              Edit dropdown menu title and manage child items.
+            </DialogDescription>
+          </DialogHeader>
+          {editingDropdown && (
+            <form onSubmit={handleDropdownUpdate} className="space-y-4 mt-3">
+              <div className="space-y-2">
+                <Label htmlFor="editDropdownTitle" className="text-sm">Dropdown Title</Label>
+                <Input
+                  id="editDropdownTitle"
+                  value={editingDropdown.title}
+                  onChange={(e) => setEditingDropdown({ ...editingDropdown, title: e.target.value })}
+                  placeholder="e.g. Services"
+                  className="h-9 text-sm"
+                />
+              </div>
+              
+              {/* Children Items Management */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Child Items</Label>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {editingDropdown.children.map((child, index) => (
+                    <div key={child._id || index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                      <Input
+                        value={child.title}
+                        onChange={(e) => {
+                          const updatedChildren = editingDropdown.children.map((c, i) => 
+                            i === index ? { ...c, title: e.target.value } : c
+                          );
+                          setEditingDropdown({ ...editingDropdown, children: updatedChildren });
+                        }}
+                        placeholder="Child title"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={child.link}
+                        onChange={(e) => {
+                          const updatedChildren = editingDropdown.children.map((c, i) => 
+                            i === index ? { ...c, link: e.target.value } : c
+                          );
+                          setEditingDropdown({ ...editingDropdown, children: updatedChildren });
+                        }}
+                        placeholder="Child link"
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const updatedChildren = editingDropdown.children.filter((_, i) => i !== index);
+                          setEditingDropdown({ ...editingDropdown, children: updatedChildren });
+                        }}
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Add New Child Item */}
+                <div className="flex gap-2">
+                  <Input
+                    value={newChildItem.title}
+                    onChange={(e) => setNewChildItem({ ...newChildItem, title: e.target.value })}
+                    placeholder="New child title"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    value={newChildItem.link}
+                    onChange={(e) => setNewChildItem({ ...newChildItem, link: e.target.value })}
+                    placeholder="New child link"
+                    className="h-8 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (newChildItem.title && newChildItem.link) {
+                        const newId = Math.random().toString(36).substr(2, 9);
+                        const newChild: DropdownChild = {
+                          _id: newId,
+                          title: newChildItem.title,
+                          link: newChildItem.link,
+                          order: editingDropdown.children.length
+                        };
+                        setEditingDropdown({
+                          ...editingDropdown,
+                          children: [...editingDropdown.children, newChild]
+                        });
+                        setNewChildItem({ title: "", link: "" });
+                      }
+                    }}
+                    className="h-8 px-3 text-xs"
+                    disabled={!newChildItem.title || !newChildItem.link}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  type="submit" 
+                  className="flex-1 text-sm"
+                >
+                  Update Dropdown Menu
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => {
+                    setEditDropdownDialogOpen(false);
+                    setEditingDropdown(null);
+                  }}
+                  className="flex-1 text-sm"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Add Top Bar Item Dialog */}
       <Dialog open={topBarDialogOpen} onOpenChange={setTopBarDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
