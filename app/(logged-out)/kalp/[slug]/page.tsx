@@ -102,26 +102,29 @@ export default function KalpDetailPage() {
 					</div>
 				</nav>
 
-				{/* Main Image */}
+				{/* Main Image and Title Section */}
 				<div className="mb-6">
-					<div className="relative overflow-hidden rounded-xl shadow-sm">
-						<img 
-							src={kalp.image} 
-							alt={kalp.title}
-							className="w-full h-48 md:h-56 object-cover"
-						/>
-						<div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+						{/* Image */}
+						<div className="relative overflow-hidden rounded-xl shadow-sm aspect-square max-w-sm mx-auto md:mx-0">
+							<img 
+								src={kalp.image} 
+								alt={kalp.title}
+								className="w-full h-full object-cover"
+							/>
+							<div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+						</div>
+						
+						{/* Title and Description */}
+						<div className="text-center md:text-left">
+							<h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
+								{kalp.title}
+							</h1>
+							<p className="text-base text-gray-600 leading-relaxed">
+								{kalp.description}
+							</p>
+						</div>
 					</div>
-				</div>
-
-				{/* Title and Description */}
-				<div className="text-center">
-					<h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
-						{kalp.title}
-					</h1>
-					<p className="text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
-						{kalp.description}
-					</p>
 				</div>
 
 
@@ -148,44 +151,54 @@ export default function KalpDetailPage() {
 						)}
 
 						{/* Additional Sections */}
-						{kalp.content.additionalSections && kalp.content.additionalSections.length > 0 && (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-								{[...kalp.content.additionalSections]
-									.filter((section: any) => section.title && section.title.trim())
-									.sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-									.map((section: any, index: number) => (
-									<div key={index} className="group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-										{section.image && (
-											<div className="relative h-40 overflow-hidden">
-												<img 
-													src={section.image} 
-													alt={section.title || `Section ${index + 1}`}
-													className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-												/>
-												<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-												<div className="absolute top-4 right-4">
-													<div className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-														<svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-														</svg>
+						{kalp.content.additionalSections && kalp.content.additionalSections.length > 0 && (() => {
+							const filteredSections = [...kalp.content.additionalSections]
+								.filter((section: any) => section.title && section.title.trim())
+								.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+							
+							const totalSections = filteredSections.length;
+							const isMultipleOf4 = totalSections % 4 === 0;
+							const isMultipleOf3 = totalSections % 3 === 0;
+							
+							// Determine grid layout: 4 if total is 4 or multiple of 4, otherwise 3
+							const gridCols = (totalSections === 4 || isMultipleOf4) ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+							
+							return (
+								<div className={`grid ${gridCols} gap-6`}>
+									{filteredSections.map((section: any, index: number) => (
+										<div key={index} className="group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+											{section.image && (
+												<div className="relative h-40 overflow-hidden">
+													<img 
+														src={section.image} 
+														alt={section.title || `Section ${index + 1}`}
+														className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+													/>
+													<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+													<div className="absolute top-4 right-4">
+														<div className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+															<svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+															</svg>
+														</div>
 													</div>
 												</div>
+											)}
+											<div className="p-6">
+												{section.title && (
+													<h4 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h4>
+												)}
+												{section.description && section.description.trim() && (
+													<p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+														{section.description}
+													</p>
+												)}
 											</div>
-										)}
-										<div className="p-6">
-											{section.title && (
-												<h4 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h4>
-											)}
-											{section.description && section.description.trim() && (
-												<p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-													{section.description}
-												</p>
-											)}
 										</div>
-									</div>
-								))}
-							</div>
-						)}
+									))}
+								</div>
+							);
+						})()}
 						</div>
 					)}
 

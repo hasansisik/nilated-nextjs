@@ -164,23 +164,7 @@ export default function Services7({ previewData }: Services7Props) {
 							{data?.description}
 						</p>
 					</div>
-					<div className="text-center mt-6">
-						
-					</div>
-					{data?.buttonVisible !== false && (
-						<div className="text-center mt-4">
-							<Link href={data?.buttonLink || "#"} className="btn btn-primary" style={buttonStyle}>
-								{data?.buttonText}
-							</Link>
-						</div>
-					)}
-					{data?.linkVisible !== false && (
-						<div className="text-center mt-2">
-							<Link href={data?.linkUrl || "#"} className="text-decoration-underline">
-								{data?.linkText}
-							</Link>
-						</div>
-					)}
+					
 				</div>
 				<div className="container mt-6">
 					<div className="row">
