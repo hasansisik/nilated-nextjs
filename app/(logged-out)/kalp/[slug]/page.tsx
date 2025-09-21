@@ -69,9 +69,9 @@ export default function KalpDetailPage() {
 		});
 	}, [dispatch, slug, kalpler]);
 
-	// Handle category click - navigate to blog category page
+	// Handle category click - navigate to content category page
 	const handleCategoryClick = (category: string) => {
-		router.push(`/blog/kategori?category=${encodeURIComponent(category)}`);
+		router.push(`/icerikler/${encodeURIComponent(slugify(category))}`);
 	};
 
 	if (loading) {
