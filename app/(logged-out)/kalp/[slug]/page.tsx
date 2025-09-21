@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllKalpler, getSingleKalp } from '@/redux/actions/kalpActions';
+import { getAllBlogs } from '@/redux/actions/blogActions';
 import { AppDispatch, RootState } from '@/redux/store';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -35,10 +36,18 @@ const slugify = (text: string) => {
 export default function KalpDetailPage() {
 	const [kalp, setKalp] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
+	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+	const [filteredBlogs, setFilteredBlogs] = useState<any[]>([]);
 	const dispatch = useDispatch<AppDispatch>();
 	const { kalpler } = useSelector((state: RootState) => state.kalp);
+	const { blogs } = useSelector((state: RootState) => state.blog);
 	const params = useParams();
 	const slug = params?.slug as string;
+
+	useEffect(() => {
+		// Load blogs
+		dispatch(getAllBlogs());
+	}, [dispatch]);
 
 	useEffect(() => {
 		// First try to find kalp from existing kalpler
@@ -65,6 +74,21 @@ export default function KalpDetailPage() {
 			setLoading(false);
 		});
 	}, [dispatch, slug, kalpler]);
+
+	// Filter blogs by selected category
+	useEffect(() => {
+		if (selectedCategory && blogs) {
+			const filtered = blogs.filter((blog: any) => {
+				if (Array.isArray(blog.category)) {
+					return blog.category.includes(selectedCategory);
+				}
+				return blog.category === selectedCategory;
+			});
+			setFilteredBlogs(filtered);
+		} else {
+			setFilteredBlogs([]);
+		}
+	}, [selectedCategory, blogs]);
 
 	if (loading) {
 		return (
@@ -102,28 +126,16 @@ export default function KalpDetailPage() {
 					</div>
 				</nav>
 
-				{/* Main Image and Title Section */}
+				{/* Main Title and Description Section */}
 				<div className="mb-6">
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-						{/* Image */}
-						<div className="relative overflow-hidden rounded-xl shadow-sm aspect-square max-w-sm mx-auto md:mx-0">
-							<img 
-								src={kalp.image} 
-								alt={kalp.title}
-								className="w-full h-full object-cover"
-							/>
-							<div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-						</div>
-						
-						{/* Title and Description */}
-						<div className="text-center md:text-left">
-							<h1 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3">
-								{kalp.title}
-							</h1>
-							<p className="text-base text-gray-600 leading-relaxed">
-								{kalp.description}
-							</p>
-						</div>
+					<div className="text-center max-w-3xl mx-auto">
+						<h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+							{kalp.title}
+						</h1>
+						<div 
+							className="text-lg text-gray-600 leading-relaxed prose prose-lg max-w-none mx-auto"
+							dangerouslySetInnerHTML={{ __html: kalp.description }}
+						/>
 					</div>
 				</div>
 
@@ -131,25 +143,6 @@ export default function KalpDetailPage() {
 				{/* Content Sections */}
 				{kalp.content && (
 					<div className="space-y-6">
-						{/* Banner Section */}
-						{kalp.content.bannerSectionTitle && kalp.content.bannerSectionTitle.trim() && (
-							<div className="text-black rounded-lg pb-4">
-								<div className="flex  mb-3">
-									<div className="w-8 h-8 bg-white/20 rounded-full flex ">
-										<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-9 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2" />
-										</svg>
-									</div>
-								</div>
-								<h3 className="text-lg font-semibold mb-3">{kalp.content.bannerSectionTitle}</h3>
-								{kalp.content.bannerSectionDescription && kalp.content.bannerSectionDescription.trim() && (
-									<p className="text-sm opacity-90 ">
-										{kalp.content.bannerSectionDescription}
-									</p>
-								)}
-							</div>
-						)}
-
 						{/* Additional Sections */}
 						{kalp.content.additionalSections && kalp.content.additionalSections.length > 0 && (() => {
 							const filteredSections = [...kalp.content.additionalSections]
@@ -166,7 +159,16 @@ export default function KalpDetailPage() {
 							return (
 								<div className={`grid ${gridCols} gap-6`}>
 									{filteredSections.map((section: any, index: number) => (
-										<div key={index} className="group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+										<div
+											key={index}
+											onClick={() => section.blogCategory ? setSelectedCategory(section.blogCategory) : null}
+											className={`group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 text-left ${
+												section.blogCategory 
+													? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-blue-200' 
+													: 'cursor-default'
+											} ${selectedCategory === section.blogCategory ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+											style={{ cursor: section.blogCategory ? 'pointer' : 'default' }}
+										>
 											{section.image && (
 												<div className="relative h-40 overflow-hidden">
 													<img 
@@ -175,13 +177,15 @@ export default function KalpDetailPage() {
 														className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 													/>
 													<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-													<div className="absolute top-4 right-4">
-														<div className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-															<svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-															</svg>
+													{section.blogCategory && (
+														<div className="absolute top-4 right-4">
+															<div className="w-8 h-8 bg-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+																<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+																</svg>
+															</div>
 														</div>
-													</div>
+													)}
 												</div>
 											)}
 											<div className="p-6">
@@ -189,9 +193,29 @@ export default function KalpDetailPage() {
 													<h4 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h4>
 												)}
 												{section.description && section.description.trim() && (
-													<p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
-														{section.description}
-													</p>
+													<div 
+														className="text-xs text-gray-600 leading-relaxed line-clamp-3 prose prose-xs max-w-none"
+														dangerouslySetInnerHTML={{ __html: section.description }}
+													/>
+												)}
+												{section.blogCategory && (
+													<div className="mt-2 text-xs text-blue-600 font-medium flex items-center gap-1">
+														{selectedCategory === section.blogCategory ? (
+															<>
+																<svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+																	<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																</svg>
+																Seçildi
+															</>
+														) : (
+															<>
+																<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+																</svg>
+																Blog yazıları için tıklayın
+															</>
+														)}
+													</div>
 												)}
 											</div>
 										</div>
@@ -199,6 +223,62 @@ export default function KalpDetailPage() {
 								</div>
 							);
 						})()}
+						
+						{/* Selected Category Blogs */}
+						{selectedCategory && (
+							<div className="space-y-6">
+								<div className="text-center">
+									<h3 className="text-xl font-bold text-gray-900 mb-2">
+										"{selectedCategory}" Kategorisindeki Blog Yazıları
+									</h3>
+									<button
+										onClick={() => setSelectedCategory(null)}
+										className="text-sm text-gray-500 hover:text-gray-700 underline"
+									>
+										Kategorileri Gizle
+									</button>
+								</div>
+								
+								{filteredBlogs.length > 0 ? (
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+										{filteredBlogs.map((blog: any, index: number) => (
+											<Link
+												key={index}
+												href={`/icerikler/${slugify(blog.title)}`}
+												className="group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+											>
+												{blog.image && (
+													<div className="relative h-40 overflow-hidden">
+														<img 
+															src={blog.image} 
+															alt={blog.title}
+															className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+														/>
+														<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+													</div>
+												)}
+												<div className="p-6">
+													<h4 className="text-base font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200 line-clamp-2">
+														{blog.title}
+													</h4>
+													<p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+														{blog.description}
+													</p>
+													<div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+														<span>{blog.author}</span>
+														<span>{blog.date}</span>
+													</div>
+												</div>
+											</Link>
+										))}
+									</div>
+								) : (
+									<div className="text-center py-8 text-gray-500">
+										Bu kategoride henüz blog yazısı bulunmuyor.
+									</div>
+								)}
+							</div>
+						)}
 						</div>
 					)}
 

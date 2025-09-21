@@ -45,12 +45,13 @@ import {
   import RichTextEditor from "@/components/RichTextEditor";
   import { useDispatch, useSelector } from "react-redux";
   import { AppDispatch, RootState } from "@/redux/store";
-  import { 
-    getAllKalpler,
-    createKalp, 
-    updateKalp, 
-    deleteKalp 
-  } from "@/redux/actions/kalpActions";
+import { 
+  getAllKalpler,
+  createKalp, 
+  updateKalp, 
+  deleteKalp 
+} from "@/redux/actions/kalpActions";
+import { createGlobalCategory, getAllCategories } from "@/redux/actions/blogActions";
   import { Loader2, Trash2, Pencil, Eye, Plus, FileJson, Download } from "lucide-react";
   import {
     Dialog,
@@ -84,7 +85,9 @@ interface Author {
 interface AdditionalSection {
   title?: string;
   description?: string;
+  image?: string;
   order?: number;
+  blogCategory?: string;
 }
 
 interface KalpContent {
@@ -112,6 +115,7 @@ export default function KalpEditor() {
   const { kalpler, loading, error, success, message } = useSelector(
     (state: RootState) => state.kalp
   );
+  const { categories } = useSelector((state: RootState) => state.blog);
   
   const [filteredKalpler, setFilteredKalpler] = useState<Kalp[]>([]);
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
@@ -136,6 +140,9 @@ export default function KalpEditor() {
     thumbnail: false,
     mainImage: false
   });
+  
+  // Uploading state for additional section images
+  const [isUploadingAdditionalImage, setIsUploadingAdditionalImage] = useState(false);
 
   const initialFormState = {
     title: "",
@@ -172,12 +179,19 @@ export default function KalpEditor() {
   const [additionalSectionItem, setAdditionalSectionItem] = useState<AdditionalSection>({
     title: '',
     description: '',
-    order: 0
+    image: '',
+    order: 0,
+    blogCategory: ''
   });
 
   // Load kalpler from Redux store
   useEffect(() => {
     dispatch(getAllKalpler());
+  }, [dispatch]);
+
+  // Load blog categories to keep them in sync
+  useEffect(() => {
+    dispatch(getAllCategories());
   }, [dispatch]);
 
   // Check URL parameters for edit/new mode
@@ -298,6 +312,31 @@ export default function KalpEditor() {
     }
   };
   
+  // Handle additional section image upload
+  const handleAdditionalSectionImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setIsUploadingAdditionalImage(true);
+      const imageUrl = await uploadImageToCloudinary(file);
+      setAdditionalSectionItem(prev => ({ ...prev, image: imageUrl }));
+      setIsUploadingAdditionalImage(false);
+      
+      setNotification({
+        type: "success",
+        message: "Section image uploaded successfully!"
+      });
+    } catch (error) {
+      console.error("Error uploading section image:", error);
+      setIsUploadingAdditionalImage(false);
+      setNotification({
+        type: "error",
+        message: "Failed to upload section image. Please try again."
+      });
+    }
+  };
+  
   
 
 
@@ -356,6 +395,17 @@ export default function KalpEditor() {
     }
 
     try {
+      // Debug: Log form data before sending
+      console.log('Form data before submit:', formData);
+      console.log('Additional sections before submit:', formData.content?.additionalSections);
+      
+      // Extract blog categories from additional sections
+      const blogCategories = formData.content?.additionalSections
+        ?.filter((section: any) => section.blogCategory && section.blogCategory.trim())
+        .map((section: any) => section.blogCategory.trim()) || [];
+
+      console.log('Extracted blog categories:', blogCategories);
+
       if (isEditMode && editingKalpId) {        
         // Update existing kalp
         const kalpData = {
@@ -365,9 +415,24 @@ export default function KalpEditor() {
           image: formData.image,
           content: formData.content
         };
+        
+        console.log('Kalp data being sent to API:', kalpData);
                 
         // Dispatch update action
         await dispatch(updateKalp(kalpData)).unwrap();
+        
+        // Add blog categories if any
+        if (blogCategories.length > 0) {
+          try {
+            await Promise.all(
+              blogCategories.map(category => 
+                dispatch(createGlobalCategory(category)).unwrap()
+              )
+            );
+          } catch (categoryError) {
+            console.warn('Some categories might already exist:', categoryError);
+          }
+        }
         
         // Reset edit mode
         setIsEditMode(false);
@@ -389,6 +454,19 @@ export default function KalpEditor() {
                 
         // Dispatch create action
         await dispatch(createKalp(kalpData)).unwrap();
+        
+        // Add blog categories if any
+        if (blogCategories.length > 0) {
+          try {
+            await Promise.all(
+              blogCategories.map(category => 
+                dispatch(createGlobalCategory(category)).unwrap()
+              )
+            );
+          } catch (categoryError) {
+            console.warn('Some categories might already exist:', categoryError);
+          }
+        }
         
         // Show success notification
         setNotification({
@@ -525,6 +603,10 @@ export default function KalpEditor() {
       return;
     }
     
+    // Debug: Log the kalp data being loaded
+    console.log('Loading kalp for edit:', kalpToEdit);
+    console.log('Additional sections from DB:', kalpToEdit.content?.additionalSections);
+    
     // Set form data
     setFormData({
       title: kalpToEdit.title || "",
@@ -542,7 +624,13 @@ export default function KalpEditor() {
         fullContent: kalpToEdit.content?.fullContent || "",
         bannerSectionTitle: kalpToEdit.content?.bannerSectionTitle || "",
         bannerSectionDescription: kalpToEdit.content?.bannerSectionDescription || "",
-        additionalSections: kalpToEdit.content?.additionalSections || []
+        additionalSections: kalpToEdit.content?.additionalSections?.map((section: any) => ({
+          title: section.title || '',
+          description: section.description || '',
+          image: section.image || '',
+          order: section.order || 0,
+          blogCategory: section.blogCategory || ''
+        })) || []
       }
     });
     
@@ -647,17 +735,28 @@ export default function KalpEditor() {
   const openAdditionalSectionDialog = (index?: number) => {
     if (index !== undefined) {
       setCurrentAdditionalSectionIndex(index);
-      setAdditionalSectionItem(formData.content?.additionalSections?.[index] || {
-        title: '',
-        description: '',
-        order: 0
+      const existingSection = formData.content?.additionalSections?.[index];
+      
+      // Debug: Log the existing section data
+      console.log('Opening dialog for section index:', index);
+      console.log('Existing section data:', existingSection);
+      console.log('Form data additionalSections:', formData.content?.additionalSections);
+      
+      setAdditionalSectionItem({
+        title: existingSection?.title || '',
+        description: existingSection?.description || '',
+        image: existingSection?.image || '',
+        order: existingSection?.order || 0,
+        blogCategory: existingSection?.blogCategory || ''
       });
     } else {
       setCurrentAdditionalSectionIndex(null);
       setAdditionalSectionItem({
         title: '',
         description: '',
-        order: formData.content?.additionalSections?.length || 0
+        image: '',
+        order: formData.content?.additionalSections?.length || 0,
+        blogCategory: ''
       });
     }
     setAdditionalSectionDialogOpen(true);
@@ -673,10 +772,17 @@ export default function KalpEditor() {
       return;
     }
     
+    // Debug: Log the section item being saved
+    console.log('Saving additional section item:', additionalSectionItem);
+    
     if (currentAdditionalSectionIndex !== null) {
       // Update existing item
       const updatedItems = [...(formData.content?.additionalSections || [])];
       updatedItems[currentAdditionalSectionIndex] = additionalSectionItem;
+      
+      console.log('Updating existing item at index:', currentAdditionalSectionIndex);
+      console.log('Updated items:', updatedItems);
+      
       setFormData(prev => ({ 
         ...prev, 
         content: {
@@ -686,6 +792,7 @@ export default function KalpEditor() {
       }));
     } else {
       // Add new item
+      console.log('Adding new item');
       setFormData(prev => ({
         ...prev,
         content: {
@@ -926,12 +1033,11 @@ export default function KalpEditor() {
                       
                       <div className="space-y-1">
                         <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                        <Textarea 
-                          id="description" 
+                        <RichTextEditor
+                          content={formData.description}
+                          onChange={(html) => setFormData({...formData, description: html})}
                           placeholder="Brief description of the kalp"
-                          value={formData.description}
-                          onChange={(e) => setFormData({...formData, description: e.target.value})}
-                          className="min-h-[70px]"
+                          className="min-h-[200px]"
                         />
                       </div>
                       
@@ -980,66 +1086,6 @@ export default function KalpEditor() {
                     </CardContent>
                   </Card>
                   
-                  <Card className="shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-base font-medium">Main Banner Section</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        This content appears in the main banner section
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="bannerSectionTitle" className="text-sm font-medium">Section Title</Label>
-                        <Input 
-                          id="bannerSectionTitle" 
-                          placeholder="Enter banner section title (defaults to main title if empty)" 
-                          value={formData.content?.bannerSectionTitle || ""}
-                          onChange={(e) => setFormData({
-                            ...formData, 
-                            content: {
-                              ...formData.content,
-                              bannerSectionTitle: e.target.value
-                            }
-                          })}
-                          className="h-9"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <Label htmlFor="bannerSectionDescription" className="text-sm font-medium">Section Description</Label>
-                        <Textarea 
-                          id="bannerSectionDescription" 
-                          placeholder="Enter banner section description (defaults to main description if empty)"
-                          value={formData.content?.bannerSectionDescription || ""}
-                          onChange={(e) => setFormData({
-                            ...formData, 
-                            content: {
-                              ...formData.content,
-                              bannerSectionDescription: e.target.value
-                            }
-                          })}
-                          className="min-h-[70px]"
-                        />
-                      </div>
-                      
-                      
-                      <div className="mt-4 p-3 bg-muted/50 rounded-md">
-                        <h4 className="text-sm font-medium mb-2">Preview</h4>
-                        <div className="border rounded-md p-4 bg-white">
-                          <div className="flex flex-col md:flex-row items-start gap-4">
-                            <div className="md:w-1/2">
-                              <h5 className="text-lg font-semibold">
-                                {formData.content?.bannerSectionTitle || formData.title || "Section Title"}
-                              </h5>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {formData.content?.bannerSectionDescription || formData.description || "Section description will appear here"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                   
                   <Card className="shadow-sm">
                     <CardHeader>
@@ -1073,11 +1119,25 @@ export default function KalpEditor() {
                                 key={index} 
                                 className="flex items-center justify-between p-3 border rounded-md"
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
+                                  {section.image && (
+                                    <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                                      <img 
+                                        src={section.image} 
+                                        alt={section.title || `Section ${index + 1}`}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    </div>
+                                  )}
                                   <div>
                                     <p className="font-medium">{section.title || `Section ${index + 1}`}</p>
                                     {section.description && (
                                       <p className="text-sm text-muted-foreground line-clamp-1">{section.description}</p>
+                                    )}
+                                    {section.blogCategory && (
+                                      <p className="text-xs text-blue-600 font-medium mt-1">
+                                        Category: {section.blogCategory}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
@@ -1230,6 +1290,92 @@ export default function KalpEditor() {
                 placeholder="Description for this section"
                 className="h-20"
               />
+            </div>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="additionalSectionImage">Image (Optional)</Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    id="additionalSectionImage"
+                    value={additionalSectionItem.image || ""}
+                    onChange={(e) => setAdditionalSectionItem({...additionalSectionItem, image: e.target.value})}
+                    placeholder="URL for section image"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    onChange={handleAdditionalSectionImageUpload}
+                    className="hidden"
+                    accept="image/*"
+                    id="additionalSectionImageFile"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => document.getElementById('additionalSectionImageFile')?.click()}
+                    disabled={isUploadingAdditionalImage}
+                    size="sm"
+                  >
+                    {isUploadingAdditionalImage ? "Uploading..." : "Upload"}
+                  </Button>
+                </div>
+              </div>
+              {additionalSectionItem.image && (
+                <div className="mt-3 relative w-1/2 mx-auto aspect-video rounded-md overflow-hidden border">
+                  <img 
+                    src={additionalSectionItem.image} 
+                    alt="Section preview" 
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="additionalSectionBlogCategory">Blog Category (Optional)</Label>
+              <div className="space-y-2">
+                <Input
+                  id="additionalSectionBlogCategory"
+                  value={additionalSectionItem.blogCategory || ""}
+                  onChange={(e) => setAdditionalSectionItem({...additionalSectionItem, blogCategory: e.target.value})}
+                  placeholder="e.g. Technology, Health, Business"
+                />
+                
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                    Debug: Current blogCategory = "{additionalSectionItem.blogCategory}"
+                  </div>
+                )}
+                
+                {/* Available categories */}
+                {categories && categories.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-gray-600">Available Categories:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {categories.map((category: string, index: number) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => setAdditionalSectionItem({...additionalSectionItem, blogCategory: category})}
+                          className={`px-2 py-1 text-xs rounded border ${
+                            additionalSectionItem.blogCategory === category 
+                              ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                              : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                This will be used to filter related blog posts when users click on this section.
+              </p>
             </div>
             
           </div>

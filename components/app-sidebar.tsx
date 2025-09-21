@@ -128,6 +128,10 @@ const data = {
         {
           title: "Hizmet",
           url: "/dashboard/hizmet",
+        },
+        {
+          title: "Kalp",
+          url: "/dashboard/kalp",
         }
       ],
     },

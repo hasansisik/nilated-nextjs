@@ -18,7 +18,6 @@ export default function DashboardLayout({
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { user, isAuthenticated, loading, error } = useSelector((state: RootState) => state.user);
   
   useEffect(() => {
     const fetchUserProfile = async () => {

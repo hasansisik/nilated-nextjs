@@ -7,6 +7,7 @@ export interface AdditionalSection {
   description?: string;
   image?: string;
   order?: number;
+  blogCategory?: string;
 }
 
 export interface KalpContent {

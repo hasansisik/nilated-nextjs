@@ -12,7 +12,7 @@ export default function Content2() {
                 <h2 
                   className="mb-5 fw-bold" 
                   style={{ 
-                    color: "#6342EC",
+                    color: "#2563EB",
                     fontSize: "2.5rem",
                     lineHeight: "1.2"
                   }}
@@ -63,7 +63,7 @@ export default function Content2() {
                     <p className="mb-3">Kimi bilgiyi taşır, kimi sesi…</p>
                     <p className="mb-3">Kimi kelimeleri yazar, kimi yaraları dinler.</p>
                     <p className="mb-3">Her birimiz farklıyız. Ama <strong>aynı niyetin yolcularıyız</strong>:</p>
-                    <p className="mb-4" style={{ fontStyle: 'italic', color: '#6342EC', fontWeight: '600' }}>
+                    <p className="mb-4" style={{ fontStyle: 'italic', color: '#2563EB', fontWeight: '600' }}>
                       Bir hayat değişsin diye…
                     </p>
                   </div>
@@ -98,7 +98,7 @@ export default function Content2() {
                   <h3 
                     className="mb-4 fw-bold" 
                     style={{ 
-                      color: "#6342EC",
+                      color: "#2563EB",
                       fontSize: "1.8rem"
                     }}
                   >
@@ -120,7 +120,7 @@ export default function Content2() {
                       style={{ 
                         fontSize: '1.3rem', 
                         fontWeight: '700',
-                        color: '#6342EC'
+                        color: '#2563EB'
                       }}
                     >
                       Hoş geldin

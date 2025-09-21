@@ -44,19 +44,14 @@ export default function Cta3({ previewData }: Cta3Props = {}) {
 		)
 	}
 	
-	// Button classes and styles
+	// Static button styles with blue colors
 	const getPrimaryButtonStyles = () => {
-		const buttonStyle: React.CSSProperties = {
-			color: data.buttons?.primary?.textColor || '#FFFFFF'
-		}
-		
-		// Only include backgroundColor if a custom one is set
-		if (data.buttons?.primary?.backgroundColor) {
-			buttonStyle.backgroundColor = data.buttons.primary.backgroundColor;
-			buttonStyle.backgroundImage = 'none'; // Override gradient
-		}
-		
-		return buttonStyle;
+		return {
+			color: '#FFFFFF',
+			backgroundColor: '#2563EB',
+			backgroundImage: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+			border: 'none'
+		};
 	}
 
 	return (
@@ -70,11 +65,11 @@ export default function Cta3({ previewData }: Cta3Props = {}) {
 									className="d-flex align-items-center justify-content-center border border-2 border-white d-inline-flex rounded-pill px-4 py-2" 
 									data-aos="zoom-in" 
 									data-aos-delay={100}
-									style={{ backgroundColor: data.tagBackgroundColor || "#f1f0fe" }}
+									style={{ backgroundColor: data.tagBackgroundColor || "#dbeafe" }}
 								>
 									<span 
 										className="tag-spacing fs-7 fw-bold ms-2 text-uppercase"
-										style={{ color: data.tagTextColor || "#6342EC" }}
+										style={{ color: data.tagTextColor || "#2563EB" }}
 									>
 										{data?.tag || "Our History"}
 									</span>

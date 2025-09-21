@@ -64,11 +64,11 @@ export default function Team() {
                 className="d-flex align-items-center justify-content-center border border-2 border-white d-inline-flex rounded-pill px-4 py-2"
                 data-aos="zoom-in"
                 data-aos-delay={100}
-                style={{ backgroundColor: "#f1f0fe" }}
+                style={{ backgroundColor: "#dbeafe" }}
               >
                 <span 
                   className="tag-spacing fs-7 fw-bold ms-2 text-uppercase"
-                  style={{ color: "#6342EC" }}
+                  style={{ color: "#2563EB" }}
                 >
                   EKİBİMİZ
                 </span>

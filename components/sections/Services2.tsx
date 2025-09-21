@@ -60,8 +60,8 @@ export default function Services2({ previewData }: Services2Props = {}) {
 	};
 
 	const tagStyle = {
-		backgroundColor: data.heading?.tagBackgroundColor || "#f1f0fe",
-		color: data.heading?.tagTextColor || "#6342EC"
+		backgroundColor: data.heading?.tagBackgroundColor || "#dbeafe",
+		color: data.heading?.tagTextColor || "#2563EB"
 	};
 
 	return (

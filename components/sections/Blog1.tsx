@@ -197,8 +197,8 @@ export default function Blog1({
   };
 
   const badgeStyle = {
-    backgroundColor: `${data.badgeBackgroundColor || "#f1f0fe"} !important`,
-    color: data.badgeTextColor || "#6342EC",
+    backgroundColor: `${data.badgeBackgroundColor || "#dbeafe"} !important`,
+    color: data.badgeTextColor || "#2563EB",
   };
 
   return (
@@ -224,8 +224,8 @@ export default function Blog1({
                   data-aos="zoom-in"
                   data-aos-delay={100}
                   style={{
-                    backgroundColor: data.badgeBackgroundColor || "#f1f0fe",
-                    color: data.badgeTextColor || "#6342EC",
+                    backgroundColor: data.badgeBackgroundColor || "#dbeafe",
+                    color: data.badgeTextColor || "#2563EB",
                   }}
                 >
                   <span className="tag-spacing fs-7 fw-bold ms-2 text-uppercase">
