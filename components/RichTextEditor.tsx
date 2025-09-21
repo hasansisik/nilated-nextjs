@@ -494,11 +494,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const setColor = (color: string) => {
     if (editor) {
-      editor
-        .chain()
-        .focus()
-        .setColor(color)
-        .run();
+      // Seçili text varsa ona renk uygula
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (selectedText) {
+        // Seçili text'e renk uygula
+        editor
+          .chain()
+          .focus()
+          .setColor(color)
+          .run();
+      } else {
+        // Cursor pozisyonuna renk uygula
+        editor
+          .chain()
+          .focus()
+          .setColor(color)
+          .run();
+      }
       
       setSelectedColor(color);
     }
@@ -871,9 +885,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 {colorOptions.map((color) => (
                   <button
                     key={color}
+                    type="button"
                     className="w-5 h-5 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     style={{ backgroundColor: color }}
-                    onClick={() => setColor(color)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setColor(color);
+                    }}
                     title={color}
                   />
                 ))}
