@@ -395,16 +395,12 @@ export default function KalpEditor() {
     }
 
     try {
-      // Debug: Log form data before sending
-      console.log('Form data before submit:', formData);
-      console.log('Additional sections before submit:', formData.content?.additionalSections);
       
       // Extract blog categories from additional sections
       const blogCategories = formData.content?.additionalSections
         ?.filter((section: any) => section.blogCategory && section.blogCategory.trim())
         .map((section: any) => section.blogCategory.trim()) || [];
 
-      console.log('Extracted blog categories:', blogCategories);
 
       if (isEditMode && editingKalpId) {        
         // Update existing kalp
@@ -415,8 +411,7 @@ export default function KalpEditor() {
           image: formData.image,
           content: formData.content
         };
-        
-        console.log('Kalp data being sent to API:', kalpData);
+
                 
         // Dispatch update action
         await dispatch(updateKalp(kalpData)).unwrap();
@@ -602,11 +597,7 @@ export default function KalpEditor() {
       });
       return;
     }
-    
-    // Debug: Log the kalp data being loaded
-    console.log('Loading kalp for edit:', kalpToEdit);
-    console.log('Additional sections from DB:', kalpToEdit.content?.additionalSections);
-    
+
     // Set form data
     setFormData({
       title: kalpToEdit.title || "",
@@ -736,11 +727,7 @@ export default function KalpEditor() {
     if (index !== undefined) {
       setCurrentAdditionalSectionIndex(index);
       const existingSection = formData.content?.additionalSections?.[index];
-      
-      // Debug: Log the existing section data
-      console.log('Opening dialog for section index:', index);
-      console.log('Existing section data:', existingSection);
-      console.log('Form data additionalSections:', formData.content?.additionalSections);
+
       
       setAdditionalSectionItem({
         title: existingSection?.title || '',
@@ -772,16 +759,10 @@ export default function KalpEditor() {
       return;
     }
     
-    // Debug: Log the section item being saved
-    console.log('Saving additional section item:', additionalSectionItem);
-    
     if (currentAdditionalSectionIndex !== null) {
       // Update existing item
       const updatedItems = [...(formData.content?.additionalSections || [])];
       updatedItems[currentAdditionalSectionIndex] = additionalSectionItem;
-      
-      console.log('Updating existing item at index:', currentAdditionalSectionIndex);
-      console.log('Updated items:', updatedItems);
       
       setFormData(prev => ({ 
         ...prev, 
@@ -792,7 +773,6 @@ export default function KalpEditor() {
       }));
     } else {
       // Add new item
-      console.log('Adding new item');
       setFormData(prev => ({
         ...prev,
         content: {

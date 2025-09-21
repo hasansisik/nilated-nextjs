@@ -38,8 +38,9 @@ import {
   Move,
   Maximize,
   Minimize,
+  FileText,
 } from 'lucide-react';
-import { uploadImageToCloudinary } from '@/utils/cloudinary';
+import { uploadImageToCloudinary, getCloudinarySettings } from '@/utils/cloudinary';
 
 interface RichTextEditorProps {
   content: string;
@@ -147,6 +148,170 @@ const VideoExtension = TiptapNode.create({
   },
 });
 
+// Custom extension for PDF files
+const PdfExtension = TiptapNode.create({
+  name: 'pdf',
+  group: 'block',
+  atom: true,
+  
+  addAttributes() {
+    return {
+      src: {
+        default: null,
+        parseHTML: element => element.querySelector('iframe')?.getAttribute('src') || null,
+        renderHTML: attributes => {
+          return {
+            'data-pdf-src': attributes.src || null,
+          }
+        }
+      },
+      title: {
+        default: 'PDF Document',
+        parseHTML: element => element.querySelector('iframe')?.getAttribute('title') || 'PDF Document',
+        renderHTML: attributes => {
+          return {
+            'data-pdf-title': attributes.title || 'PDF Document',
+          }
+        }
+      },
+      size: {
+        default: 'medium', // small, medium, large
+        parseHTML: element => element.getAttribute('data-pdf-size') || 'medium',
+        renderHTML: attributes => {
+          return {
+            'data-pdf-size': attributes.size || 'medium',
+          }
+        }
+      },
+      align: {
+        default: 'center',
+        parseHTML: element => element.getAttribute('align') || 'center',
+        renderHTML: attributes => {
+          return {
+            align: attributes.align || 'center',
+          }
+        }
+      },
+    }
+  },
+  
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-pdf]',
+      },
+    ]
+  },
+  
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
+    const { src, title, size, align, 'data-pdf-src': dataPdfSrc } = HTMLAttributes;
+    
+    // Use data-pdf-src if src is not available
+    const pdfSrc = src || dataPdfSrc;
+    
+    
+    // Fixed height for all PDF sizes
+    const height = '1200px';
+    
+    // Convert align value to HTML attributes and inline styles
+    let style = '';
+    let alignAttr = align;
+    
+    if (align === 'full') {
+      style = 'display: block; width: 100%; margin-left: auto; margin-right: auto;';
+      alignAttr = 'center';
+    } else if (align === 'center') {
+      style = 'display: block; margin-left: auto; margin-right: auto;';
+    } else if (align === 'left') {
+      style = 'float: left; margin-right: 1rem; max-width: 50%;';
+    } else if (align === 'right') {
+      style = 'float: right; margin-left: 1rem; max-width: 50%;';
+    }
+    
+    return [
+      'div', 
+      { 
+        class: 'pdf-embed my-6', 
+        'data-pdf': '', 
+        'data-pdf-src': src,
+        'data-pdf-title': title,
+        'data-pdf-size': size,
+        style: `position: relative; margin: 1.5rem 0; width: 100%; ${style}`,
+        align: alignAttr
+      }, 
+      ['iframe', { 
+        src: pdfSrc,
+        width: '100%',
+        height: height,
+        frameborder: '0',
+        style: `width: 100%; height: ${height}; border: 1px solid #e5e7eb; border-radius: 0.375rem; aspect-ratio: 1 / 1.414;`,
+        title: title || 'PDF Document'
+      }],
+    ];
+  },
+});
+
+// Helper function to upload PDF to Cloudinary using raw upload
+const uploadPdfToCloudinary = async (file: File): Promise<string> => {
+  // Refresh settings before upload to ensure we have the latest
+  await getCloudinarySettings();
+  
+  // Get Cloudinary settings from the imported function
+  const { getCloudinarySettings: getSettings } = await import('@/utils/cloudinary');
+  await getSettings();
+  
+  // Import crypto for signature generation
+  const crypto = await import('crypto');
+  
+  // Get settings from Redux store
+  const { store } = await import('@/redux/store');
+  const { getGeneral } = await import('@/redux/actions/generalActions');
+  
+  await store.dispatch(getGeneral());
+  const state = store.getState();
+  const { general } = state.general;
+  
+  if (!general?.cloudinary?.cloudName || !general?.cloudinary?.apiKey || !general?.cloudinary?.apiSecret) {
+    throw new Error('Cloudinary credentials not found or invalid. Please check your settings.');
+  }
+  
+  const CLOUD_NAME = general.cloudinary.cloudName;
+  const API_KEY = general.cloudinary.apiKey;
+  const API_SECRET = general.cloudinary.apiSecret;
+  
+  return new Promise((resolve, reject) => {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    
+    // Generate signature for raw upload
+    const str = `timestamp=${timestamp}${API_SECRET}`;
+    const signature = crypto.createHash('sha1').update(str).digest('hex');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', API_KEY);
+    formData.append('timestamp', timestamp.toString());
+    formData.append('signature', signature);
+
+    // Use raw upload endpoint for PDFs
+    fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          reject(new Error(data.error.message));
+        } else {
+          resolve(data.secure_url);
+        }
+      })
+      .catch(error => {
+        console.error('PDF Upload error:', error);
+        reject(error);
+      });
+  });
+};
+
 // Helper function to extract video ID from URLs
 const getVideoId = (url: string, provider: 'youtube' | 'vimeo'): string | null => {
   if (provider === 'youtube') {
@@ -201,11 +366,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [isVideoMenuOpen, setIsVideoMenuOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube');
+  const [isPdfMenuOpen, setIsPdfMenuOpen] = useState(false);
+  const [isPdfUploading, setIsPdfUploading] = useState(false);
   const [selectedImageNode, setSelectedImageNode] = useState<any>(null);
   const [selectedVideoNode, setSelectedVideoNode] = useState<any>(null);
   const [selectedNodeAlign, setSelectedNodeAlign] = useState<string>('center');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const linkInputRef = useRef<HTMLInputElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -274,6 +442,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         },
       }),
       VideoExtension,
+      PdfExtension,
     ],
     content: content,
     onUpdate: ({ editor }) => {
@@ -355,6 +524,50 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     } catch (error) {
       console.error("Error uploading image:", error);
       setIsUploading(false);
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is PDF
+    if (file.type !== 'application/pdf') {
+      alert('Please select a PDF file');
+      return;
+    }
+    
+    try {
+      setIsPdfUploading(true);
+      
+      // Upload PDF using raw upload endpoint
+      const pdfUrl = await uploadPdfToCloudinary(file);
+      
+      
+      // Insert PDF into editor
+      if (editor) {
+        const pdfAttrs = {
+          src: pdfUrl,
+          title: file.name.replace('.pdf', ''),
+          size: 'medium'
+        };
+        
+        
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'pdf',
+            attrs: pdfAttrs
+          })
+          .run();
+      }
+      
+      setIsPdfUploading(false);
+      setIsPdfMenuOpen(false);
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      setIsPdfUploading(false);
     }
   };
 
@@ -1188,6 +1401,50 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </div>
               )}
             </div>
+            
+            {/* PDF Button */}
+            <div className="relative">
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setIsPdfMenuOpen(!isPdfMenuOpen)}
+                type="button"
+                title="Insert PDF"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+              {isPdfMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 p-3 bg-white border rounded-md shadow-md z-10 flex flex-col gap-2 min-w-[300px]">
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-xs font-medium">Upload PDF Document</label>
+                    <input
+                      type="file"
+                      ref={pdfInputRef}
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                      accept=".pdf,application/pdf"
+                    />
+                    {!isPdfUploading && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => pdfInputRef.current?.click()} 
+                        type="button" 
+                        className="w-full"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Choose PDF File
+                      </Button>
+                    )}
+                    
+                    {isPdfUploading && (
+                      <div className="flex items-center justify-center p-2 bg-gray-50 rounded border">
+                        <div className="animate-pulse text-sm">Uploading PDF...</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
@@ -1421,6 +1678,30 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         /* Video seçimini engelle */
         .ProseMirror .video-embed * {
           pointer-events: none;
+        }
+        
+        /* PDF styles */
+        .ProseMirror .pdf-embed {
+          margin: 1.5rem 0;
+          clear: both;
+          width: 100%;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        .ProseMirror .pdf-embed iframe {
+          width: 100% !important;
+          height: 1200px !important;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.375rem;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .ProseMirror .pdf-embed:hover iframe {
+          border-color: #3b82f6;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
         /* Image spacing */
