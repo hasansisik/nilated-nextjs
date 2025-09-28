@@ -74,6 +74,17 @@ export default function KalpDetailPage() {
 		router.push(`/icerikler/${encodeURIComponent(slugify(category))}`);
 	};
 
+	// Handle section click - check if it should open detail page
+	const handleSectionClick = (section: any) => {
+		if (section.isDetailPage) {
+			// Navigate to detail page
+			window.open(`/kalp/${slug}/detail/${encodeURIComponent(slugify(section.title || ''))}`, '_blank');
+		} else if (section.blogCategory) {
+			// Navigate to category page
+			handleCategoryClick(section.blogCategory);
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className="flex justify-center items-center min-h-[400px]">
@@ -145,13 +156,13 @@ export default function KalpDetailPage() {
 									{filteredSections.map((section: any, index: number) => (
 										<div
 											key={index}
-											onClick={() => section.blogCategory ? handleCategoryClick(section.blogCategory) : null}
+											onClick={() => handleSectionClick(section)}
 											className={`group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 text-left ${
-												section.blogCategory 
+												(section.blogCategory || section.isDetailPage)
 													? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-blue-200' 
 													: 'cursor-default'
 											}`}
-											style={{ cursor: section.blogCategory ? 'pointer' : 'default' }}
+											style={{ cursor: (section.blogCategory || section.isDetailPage) ? 'pointer' : 'default' }}
 										>
 											{section.image && (
 												<div className="relative h-40 overflow-hidden">
@@ -165,7 +176,10 @@ export default function KalpDetailPage() {
 											)}
 											<div className="p-6">
 												{section.title && (
-													<h6 className="text-sm font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h6>
+													<div className="flex items-center gap-2 mb-2">
+														<h6 className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-200">{section.title}</h6>
+														
+													</div>
 												)}
 												{section.description && section.description.trim() && (
 													<div 

@@ -8,6 +8,8 @@ export interface AdditionalSection {
   image?: string;
   order?: number;
   blogCategory?: string;
+  isDetailPage?: boolean;
+  detailContent?: string;
 }
 
 export interface KalpContent {

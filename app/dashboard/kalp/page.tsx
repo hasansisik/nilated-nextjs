@@ -88,6 +88,8 @@ interface AdditionalSection {
   image?: string;
   order?: number;
   blogCategory?: string;
+  isDetailPage?: boolean;
+  detailContent?: string;
 }
 
 interface KalpContent {
@@ -181,7 +183,9 @@ export default function KalpEditor() {
     description: '',
     image: '',
     order: 0,
-    blogCategory: ''
+    blogCategory: '',
+    isDetailPage: false,
+    detailContent: ''
   });
 
   // Load kalpler from Redux store
@@ -620,7 +624,9 @@ export default function KalpEditor() {
           description: section.description || '',
           image: section.image || '',
           order: section.order || 0,
-          blogCategory: section.blogCategory || ''
+          blogCategory: section.blogCategory || '',
+          isDetailPage: section.isDetailPage || false,
+          detailContent: section.detailContent || ''
         })) || []
       }
     });
@@ -734,7 +740,9 @@ export default function KalpEditor() {
         description: existingSection?.description || '',
         image: existingSection?.image || '',
         order: existingSection?.order || 0,
-        blogCategory: existingSection?.blogCategory || ''
+        blogCategory: existingSection?.blogCategory || '',
+        isDetailPage: existingSection?.isDetailPage || false,
+        detailContent: existingSection?.detailContent || ''
       });
     } else {
       setCurrentAdditionalSectionIndex(null);
@@ -743,7 +751,9 @@ export default function KalpEditor() {
         description: '',
         image: '',
         order: formData.content?.additionalSections?.length || 0,
-        blogCategory: ''
+        blogCategory: '',
+        isDetailPage: false,
+        detailContent: ''
       });
     }
     setAdditionalSectionDialogOpen(true);
@@ -802,6 +812,15 @@ export default function KalpEditor() {
         additionalSections: reorderedItems
       }
     }));
+  };
+
+  // Handle section click - check if it should open detail page
+  const handleSectionClick = (section: AdditionalSection, kalpId: string) => {
+    if (section.isDetailPage) {
+      // Navigate to detail page
+      const sectionSlug = section.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '') || '';
+      window.open(`/dashboard/kalp/detail/${kalpId}?section=${encodeURIComponent(section.title || '')}`, '_blank');
+    }
   };
 
   return (
@@ -1097,7 +1116,10 @@ export default function KalpEditor() {
                             {formData.content.additionalSections.map((section, index) => (
                               <div 
                                 key={index} 
-                                className="flex items-center justify-between p-3 border rounded-md"
+                                className={`flex items-center justify-between p-3 border rounded-md ${
+                                  section.isDetailPage ? 'cursor-pointer hover:bg-gray-50' : ''
+                                }`}
+                                onClick={() => section.isDetailPage ? handleSectionClick(section, String(editingKalpId || '')) : undefined}
                               >
                                 <div className="flex items-center gap-3">
                                   {section.image && (
@@ -1110,7 +1132,14 @@ export default function KalpEditor() {
                                     </div>
                                   )}
                                   <div>
-                                    <p className="font-medium">{section.title || `Section ${index + 1}`}</p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium">{section.title || `Section ${index + 1}`}</p>
+                                      {section.isDetailPage && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          Detail Page
+                                        </Badge>
+                                      )}
+                                    </div>
                                     {section.description && (
                                       <p className="text-sm text-muted-foreground line-clamp-1">{section.description}</p>
                                     )}
@@ -1126,7 +1155,10 @@ export default function KalpEditor() {
                                     type="button" 
                                     size="icon" 
                                     variant="ghost" 
-                                    onClick={() => openAdditionalSectionDialog(index)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openAdditionalSectionDialog(index);
+                                    }}
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
@@ -1134,7 +1166,10 @@ export default function KalpEditor() {
                                     type="button" 
                                     size="icon" 
                                     variant="ghost" 
-                                    onClick={() => deleteAdditionalSectionItem(index)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteAdditionalSectionItem(index);
+                                    }}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -1240,7 +1275,7 @@ export default function KalpEditor() {
       
       {/* Dialog for Additional Section */}
       <Dialog open={additionalSectionDialogOpen} onOpenChange={setAdditionalSectionDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {currentAdditionalSectionIndex !== null ? "Edit Additional Section" : "Add Additional Section"}
@@ -1350,6 +1385,42 @@ export default function KalpEditor() {
                 This will be used to filter related blog posts when users click on this section.
               </p>
             </div>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="additionalSectionIsDetailPage"
+                  checked={additionalSectionItem.isDetailPage || false}
+                  onCheckedChange={(checked) => setAdditionalSectionItem({...additionalSectionItem, isDetailPage: !!checked})}
+                />
+                <Label htmlFor="additionalSectionIsDetailPage" className="text-sm font-medium">
+                  Open Detail Page
+                </Label>
+              </div>
+              <p className="text-xs text-gray-500">
+                When checked, clicking this section will open a detail page with RichTextEditor content.
+              </p>
+            </div>
+            
+            {/* Detail Content Editor - Only show when isDetailPage is true */}
+            {additionalSectionItem.isDetailPage && (
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="additionalSectionDetailContent" className="text-sm font-medium">
+                  Detail Content
+                </Label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Add rich content that will be displayed on the detail page
+                </p>
+                <div className="border rounded-md">
+                  <RichTextEditor
+                    content={additionalSectionItem.detailContent || ""}
+                    onChange={(html) => setAdditionalSectionItem({...additionalSectionItem, detailContent: html})}
+                    placeholder="Add detailed content for this section..."
+                    className="min-h-[300px]"
+                  />
+                </div>
+              </div>
+            )}
             
           </div>
           
