@@ -545,9 +545,9 @@ export default function SlugPageClient({ slug }: SlugPageClientProps) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="flex justify-center items-center flex-col h-[60vh]">
-          <h1 className="text-3xl font-bold mb-4">Content Not Found</h1>
+          <h1 className="text-3xl font-bold mb-4">Sayfa Bulunamadı</h1>
           <p className="text-gray-600">
-            The requested content could not be found.
+            İstenen içerik bulunamadı.
           </p>
         </div>
       </div>
