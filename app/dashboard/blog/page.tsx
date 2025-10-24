@@ -178,6 +178,7 @@ export default function BlogEditor() {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [authorDialogOpen, setAuthorDialogOpen] = useState(false);
   const [newAuthorData, setNewAuthorData] = useState({ name: "", avatar: "", bio: "" });
   const [editingAuthor, setEditingAuthor] = useState<any>(null);
@@ -676,6 +677,9 @@ export default function BlogEditor() {
       await dispatch(createGlobalCategory(newCategoryName.trim())).unwrap();
       setNewCategoryName("");
       
+      // Refresh categories list
+      dispatch(getAllCategories());
+      
       setNotification({
         type: "success",
         message: "Kategori başarıyla eklendi.",
@@ -690,8 +694,22 @@ export default function BlogEditor() {
   
   // Handle deleting a global category
   const handleDeleteGlobalCategory = async (category: string) => {
+    setCategoryToDelete(category);
+    setDeleteCategoryDialogOpen(true);
+  };
+
+  // Confirm category deletion
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
     try {
-      await dispatch(deleteGlobalCategory(category)).unwrap();
+      await dispatch(deleteGlobalCategory(categoryToDelete)).unwrap();
+      
+      // Refresh categories list
+      dispatch(getAllCategories());
+      
+      setDeleteCategoryDialogOpen(false);
+      setCategoryToDelete(null);
       
       setNotification({
         type: "success",
@@ -1625,6 +1643,7 @@ export default function BlogEditor() {
                     handleAddGlobalCategory();
                   }
                 }}
+                disabled={categoryLoading}
               />
               <Button 
                 type="button" 
@@ -1814,6 +1833,52 @@ export default function BlogEditor() {
           <DialogFooter>
             <Button variant="outline" onClick={resetAuthorDialog}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Deletion Confirmation Dialog */}
+      <Dialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertCircle className="h-5 w-5" />
+                Confirm Category Deletion
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the category "{categoryToDelete}"? This action will remove the category from all blog posts that use it. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteCategoryDialogOpen(false);
+                setCategoryToDelete(null);
+              }}
+              disabled={categoryLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteCategory}
+              disabled={categoryLoading}
+            >
+              {categoryLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Category
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
