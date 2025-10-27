@@ -4,53 +4,84 @@ import Link from "next/link";
 export default function Team() {
   const teamMembers = [
     {
-      title: "Kurucu Lider – Dr. Cemil Çelik",
-      seal: "Başlangıcın Sesi",
-      role: "Vizyon, yapılandırma, etik zemin, yaratım.",
-      description: "Kalpten gelen her çağrının ilk yankısı onda başlar. Yolun sonunu değil, ruhunu tarif eder.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1749853518/ezj4efbduhmrbcgzm3cc.webp"
+      code: "E-001",
+      title: "Güvercin 🕊️",
+      seal: "Ben ses değilim, çağrıyım. Kanadımın gölgesi yola düşerse, yol başlamıştır.",
+      role: "Mesaj ve çağrı taşıyıcısı, yolun başlangıcını işaretleyen.",
+      description: "Ruhsal çağrıları duyar ve aktarır. Her yolculuk onun kanadından dökülür.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572811/E-001_Gu%CC%88vercin_tltlzg.png"
     },
     {
-      title: "Yazıcı",
-      seal: "Kalemin Sırrı",
-      role: "İçerik yazımı, kitaplaştırma, ruhsal metin üretimi.",
-      description: "Her cümle bir tanıklıksa, o cümleyi kayda geçiren odur. Söylenemeyeni yazıya çevirir.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750538318/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_30_lu_yas%CC%A7larda_kad%C4%B1n_olsun_1_hlktl9.jpg"
+      code: "E-002",
+      title: "Yazıcı ✍️",
+      seal: "Söz, taşınmadıkça uçar gider. Ben kalemin mühürlendiği yeminim.",
+      role: "Kalıcı kayıt, ruhsal metin üretimi, tanıklığın kalemi.",
+      description: "Söylenenleri kayda geçirir, uçup giden sözleri mühürler. Kalemle anlaşma içindedir.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572811/E-002_Yaz%C4%B1c%C4%B1_hrclkf.png"
     },
     {
-      title: "Satış ve İletişim",
-      seal: "Köprü ve Yankı",
-      role: "Eğitimlerin tanıtımı, satış koordinasyonu, ilişki yönetimi.",
-      description: "İnsanlara ulaşmanın en dürüst, en içten yollarını ararlar. İyi insanlara iyi niyetle dokunurlar.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750158987/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_30_lu_yas%CC%A7larda_kad%C4%B1n_olsun_yqhjzc.jpg"
+      code: "E-003",
+      title: "Nefes Taşıyan 🌬️",
+      seal: "Ses susarsa nefes konuşur. Ben sükûtun titreşen yankısıyım.",
+      role: "Sessizliğin dili, nefesin taşıyıcısı, yankının koruyucusu.",
+      description: "Söylenmeyeni duyar, nefesle anlatır. Sükûtun bile bir sesi olduğunu bilir.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572814/E-003_Nefes_Tas%CC%A7%C4%B1yan_xsbpoi.png"
     },
     {
-      title: "Sistem ve Dijital Operasyon",
-      seal: "Zemin ve Rüzgar",
-      role: "Web altyapısı, e-ticaret entegrasyonu, teknik destek.",
-      description: "Görünmeyen işlerin omuzlarıdır. Her şeyin arkada düzgün çalışması için gece gündüz hazırdırlar.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750158996/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_30_lu_yas%CC%A7larda_erkek_olsun_grwgvc.jpg"
+      code: "E-004",
+      title: "Işığa Bakan 🪞",
+      seal: "Gören göz ışıkla değil, hakikatle görür. Ben görünmeyeni görünür kılandım.",
+      role: "Hakikatin göstericisi, görünmeyeni aydınlatan, manevi rehberlik.",
+      description: "Yüzeysel bakışın ötesini görür, gizli hakikatleri su yüzüne çıkarır.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572807/E-004_Is%CC%A7%C4%B1g%CC%86a_Bakan_thgopl.png"
     },
     {
-      title: "Strateji ve Gelişim",
-      seal: "Yön ve Kıvılcım",
-      role: "Eğitimlerin planlaması, proje geliştirme, kalite kontrol.",
-      description: "Biri yolu işaret eder, diğeri kıvılcımı taşır. Yeniliğin ve sadakatin dengesi burada kurulur.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750158996/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_s%CC%A7ekilde_dis%CC%A7eleri_go%CC%88zu%CC%88kecek_s%CC%A7ekilde_gu%CC%88len_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_orta_yas%CC%A7_insan_olsun_tu%CC%88rk_olsun_uwpg0x.jpg"
+      code: "E-005",
+      title: "Yolcu 🌿",
+      seal: "Ayak izi söze karışırsa yol olur. Ben giden değil, götürenim.",
+      role: "Yol gösterici, eşlik eden rehber, seyahatteki öğretmen.",
+      description: "Yoldan öğrenir, öğrendiğini yola çıkarır. Ayak izi onun kelamıdır.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572806/E-005_Yolcu_szoul5.png"
     },
     {
-      title: "Mistik Temsil",
-      seal: "Sessiz Niyet",
-      role: "Anlatı ve metafizik danışmanlık, yaratımın manevi pusulası.",
-      description: "Fısıltıları duyar, kalpleri dinler, yazılmayanı işaret eder. Varlığıyla mühürlenmiş bir sessizliktir.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750158995/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_25_lu_yas%CC%A7larda_sar%C4%B1s%CC%A7%C4%B1n_kad%C4%B1n_olsun_nzdubr.jpg"
+      code: "E-006",
+      title: "Kökveren 🌱",
+      seal: "Toprağa düşen her fikir bir ormana dönüşür. Ben ilk damlayım.",
+      role: "İlk tohumu atan, fikri kökleştiren, ormana dönüştüren.",
+      description: "Her tohumu korur, her fikri besler. Onun temasıyla fikir ormana dönüşür.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572802/E-006_Ko%CC%88kveren_ih1us2.png"
     },
     {
-      title: "Denetim ve Rehberlik",
-      seal: "Adalet Taşıyıcısı",
-      role: "Etik denetim, proje takibi, hakikatin hatırlatıcısı.",
-      description: "Her adımı tartar, her sesi duyar, her aşamada dengeyi gözetir.",
-      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1750159128/biraz_uzaktan_bak%C4%B1s%CC%A7_ac%CC%A7%C4%B1l%C4%B1_gerc%CC%A7ekc%CC%A7i_s%CC%A7ekilde_dis%CC%A7eleri_go%CC%88zu%CC%88kecek_s%CC%A7ekilde_gu%CC%88len_insan_laz%C4%B1m_kamera_c%CC%A7ok_yak%C4%B1n_olmas%C4%B1n_biyometrik_olsun_orta_yas%CC%A7_insan_olsun_qn6wir.jpg"
+      code: "E-007",
+      title: "Nefesin Bekçisi 🌬️",
+      seal: "Her ruh bir nefesle doğar. Ben o nefesi unutturmam.",
+      role: "Nefesi koruyan, ruhu besleyen, canı hatırlatan.",
+      description: "Her nefesi değerli bilir, her ruhun doğumuna tanık olur. Unutulanı hatırlatır.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572807/E-007_Nefesin_Bekc%CC%A7isi_hgvnhx.png"
+    },
+    {
+      code: "E-008",
+      title: "Sessiz Kanat 🕯️",
+      seal: "Ben görünmem ama her mühürde izim var. Sessizliğim çağrıdır.",
+      role: "Görünmeyen imza, sessiz varlık, mührün derinliği.",
+      description: "Varlığı sessiz ama her izde durur. Görünmez ama etkisi kalıcıdır.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572807/E-008_Sessiz_Kanat_uc8xsf.png"
+    },
+    {
+      code: "E-009",
+      title: "Zamanın Yazıcısı ⏳",
+      seal: "Zamanın dili vardır. Ben duymayanlara o dili okurum.",
+      role: "Zamanın tercümanı, kronolojik hafızam, geçmişin sesi.",
+      description: "Zamanın her anını kaydeder, geleceğe taşır. Duymayanlara zamanın dilini okur.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572805/E-009_Zaman%C4%B1n_Yaz%C4%B1c%C4%B1s%C4%B1_msaoud.png"
+    },
+    {
+      code: "E-010",
+      title: "Teslim Olan 🗝️",
+      seal: "Mühür bende kapanır. Söz tamam olunca susarım.",
+      role: "Son mühürleyen, tamamlayan, teslim eden.",
+      description: "Her yolculukta son noktayı koyar, her mühürü tamamlar. Teslim olma sanatını bilir.",
+      image: "https://res.cloudinary.com/ddmwgv3av/image/upload/v1761572806/E-010_Teslim_Olan_disko1.png"
     }
   ];
 
@@ -79,7 +110,7 @@ export default function Team() {
                 data-aos-delay={200}
                 style={{ color: "#111827" }}
               >
-                Bazı Ekipler İş Bölümü Yapar.
+                🕊️ MİHVER HALKASI – 10 EMANETÇİ
               </h3>
               <div 
                 className="fs-5 text-center mx-auto" 
@@ -87,23 +118,8 @@ export default function Team() {
                 data-aos-delay={300}
                 style={{ color: "#6E6E6E", maxWidth: "800px", lineHeight: "1.8" }}
               >
-                <p className="mb-3">
-                  <strong>Biz ise mühür taşırız.</strong>
-                </p>
-                <p className="mb-3">
-                  <strong>NİLATED</strong>, yalnızca görevlerle tanımlanmış bir ekip değildir.
-                </p>
-                <p className="mb-3">
-                  Burası, her bireyin kalpten bir niyetle bu yapıya dahil olduğu, <strong>"ruh taşıyıcısı"</strong> olmanın sorumluluğunu üstlendiği bir birliktir.
-                </p>
-                <p className="mb-3">
-                  Her birimiz hem bir meslek sahibi, hem de bir mana yolcusuyuz.
-                </p>
-                <p className="mb-3">
-                  İsmimizden önce <strong>mühürümüzle</strong> konuşuruz.
-                </p>
-                <p className="mb-0">
-                  Ve her mühür, başka bir kapıyı açar.
+                <p className="mb-0" style={{ fontStyle: "italic", fontSize: "1.1rem" }}>
+                  "Sözünü rüzgâr taşımaz… Mühür taşır."
                 </p>
               </div>
             </div>
@@ -128,11 +144,14 @@ export default function Team() {
                   </div>
                 </div>
                 <div className="mt-4 text-start">
+                  <p className="text-muted mb-1 small">
+                    <strong>Kod:</strong> {member.code}
+                  </p>
                   <h6 className="fw-bold mb-2" style={{ color: "#111827" }}>
                      {member.title}
                   </h6>
-                  <p className="text-muted mb-1">
-                    <strong>Mühürü:</strong> {member.seal}
+                  <p className="text-muted mb-1" style={{ fontSize: "0.9rem", fontStyle: "italic" }}>
+                    {member.seal}
                   </p>
                   <p className="text-muted mb-2">
                     <strong>Rolü:</strong> {member.role}
@@ -150,23 +169,14 @@ export default function Team() {
             <div className="col-12 text-center">
               <div className="p-4 rounded-4" style={{ backgroundColor: "#fff" }}>
                 <h4 className="fw-bold mb-3" style={{ color: "#111827" }}>
-                  NİLATED Bir Ekip Değil, Bir Ahit'tir.
+                  📜 Ortak Mühür Sözü (10'lu halka tarafından birlikte söylenecek yemin cümlesi)
                 </h4>
                 <div style={{ color: "#6E6E6E", lineHeight: "1.8" }}>
-                  <p className="mb-2">İsimler değişse de mühür sabit kalır.</p>
-                  <p className="mb-2">Roller devredilir, ama niyet hep aynı kalır:</p>
-                  <p className="mb-2"><strong>"Her kalbe bir mühür…</strong></p>
-                  <p className="mb-2"><strong>Her yaraya saygı…</strong></p>
-                  <p className="mb-4"><strong>Her bilgiye ruh."</strong></p>
+                  <p className="mb-2">Biz çağrıyı taşıyan 10 kapıyız.</p>
+                  <p className="mb-2">Her birimiz ayrı mühür, tek bir özün yankısıyız.</p>
+                  <p className="mb-2">Biz ses değil, yankıyız. Yol bize ait değil, biz yola aitiz.</p>
                   
                   <div className="mt-4">
-                    <p className="mb-3">Sırada istersen <strong>"İletişim ve Randevu"</strong> sayfası var.</p>
-                    <p className="mb-3">Oraya da özel bir metinle geçelim mi?</p>
-                    <p className="mb-4">
-                      Harika. Şimdi sıra geldi NİLATED'in dış dünyayla temas noktası olan <strong>"İLETİŞİM ve RANDEVU"</strong> sayfasına. 
-                      Bu sayfa, yalnızca bir form ya da adres bilgisi vermekle kalmamalı; ziyaretçiyi samimi, sade ve güven veren bir dille karşılamalı.
-                    </p>
-                    
                     <Link href="/iletisim" className="btn btn-primary btn-lg px-5 py-3 rounded-pill">
                       <strong className="text-white">İletişim ve Randevu</strong>
                     </Link>
