@@ -87,6 +87,46 @@ export default function Team() {
 
   return (
     <>
+      <style jsx>{`
+        .team-members-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 20px;
+        }
+        
+        .team-member-card {
+          width: 20%;
+          padding: 0 10px;
+          min-width: 200px;
+        }
+        
+        @media (max-width: 1200px) {
+          .team-member-card {
+            width: 25%;
+          }
+        }
+        
+        @media (max-width: 992px) {
+          .team-member-card {
+            width: 33.333%;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .team-member-card {
+            width: 50%;
+            min-width: 180px;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .team-member-card {
+            width: 100%;
+            max-width: 300px;
+          }
+        }
+      `}</style>
       <section className="section-team-1 py-5 position-relative overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
         <div className="container">
           <div className="row position-relative z-1">
@@ -104,14 +144,14 @@ export default function Team() {
                   EKİBİMİZ
                 </span>
               </div>
-              <h3
-                className="ds-3 my-3 fw-bold"
+              <h4
+                className="ds-4 my-3 fw-bold"
                 data-aos="fade-zoom-in"
                 data-aos-delay={200}
                 style={{ color: "#111827" }}
               >
                 🕊️ MİHVER HALKASI – 10 EMANETÇİ
-              </h3>
+              </h4>
               <div 
                 className="fs-5 text-center mx-auto" 
                 data-aos="fade-zoom-in" 
@@ -125,13 +165,13 @@ export default function Team() {
             </div>
           </div>
           
-          <div className="row mt-6">
+          <div className="row mt-6 g-4 team-members-container">
             {teamMembers.map((member, index) => (
               <div
                 key={index}
-                className="col-lg-3 col-md-6 mb-lg-4 mb-7"
+                className="mb-4 team-member-card"
                 data-aos="fade-zoom-in"
-                data-aos-delay={100 + (index % 4) * 100}
+                data-aos-delay={100 + (index % 5) * 100}
               >
                 <div className="position-relative d-inline-block z-1 w-100 text-center">
                   <div className="zoom-img rounded-3">
@@ -139,7 +179,7 @@ export default function Team() {
                       className="img-fluid w-100"
                       src={member.image}
                       alt={member.title}
-                      style={{ borderRadius: '8px', aspectRatio: '1/1', objectFit: 'cover' }}
+                      style={{ borderRadius: '8px', aspectRatio: '2/3', objectFit: 'cover', width: '100%' }}
                     />
                   </div>
                 </div>
