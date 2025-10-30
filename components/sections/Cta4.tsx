@@ -1,11 +1,11 @@
 'use client'
 import Link from "next/link"
 import { useState, useEffect } from 'react'
-import ModalVideo from 'react-modal-video'
 import { useDispatch, useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
 import { getCta } from "@/redux/actions/ctaActions"
 import { AppDispatch } from "@/redux/store"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface Cta4Props {
 	previewData?: any;
@@ -171,7 +171,17 @@ export default function Cta4({ previewData }: Cta4Props = {}) {
 				</div>
 			</section>
 
-			<ModalVideo channel='youtube' isOpen={isOpen} videoId={data.videoGuide.videoId} onClose={() => setOpen(false)} />
+			<Dialog open={isOpen} onOpenChange={setOpen}>
+				<DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none">
+					<div className="relative w-full flex justify-center items-center">
+						<img 
+							src="https://res.cloudinary.com/ddmwgv3av/image/upload/v1761862181/E-000_HATT-I_EMAN_xxchcu.png" 
+							alt="Hatt-ı Eman" 
+							className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+						/>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</>
 	)
 }
