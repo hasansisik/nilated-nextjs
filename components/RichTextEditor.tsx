@@ -39,6 +39,7 @@ import {
   Maximize,
   Minimize,
   FileText,
+  Music,
 } from 'lucide-react';
 import { uploadImageToCloudinary, getCloudinarySettings } from '@/utils/cloudinary';
 
@@ -144,6 +145,93 @@ const VideoExtension = TiptapNode.create({
         allowfullscreen: 'true',
         style: 'width: 100%; height: 400px;'
       }],
+    ];
+  },
+});
+
+// Custom extension for Audio files
+const AudioExtension = TiptapNode.create({
+  name: 'audio',
+  group: 'block',
+  atom: true,
+  
+  addAttributes() {
+    return {
+      src: {
+        default: null,
+      },
+      controls: {
+        default: true,
+        parseHTML: element => element.hasAttribute('controls'),
+        renderHTML: attributes => {
+          if (attributes.controls) {
+            return {
+              controls: 'true',
+            }
+          }
+          return {}
+        }
+      },
+      align: {
+        default: 'center',
+        parseHTML: element => element.getAttribute('align') || 'center',
+        renderHTML: attributes => {
+          return {
+            align: attributes.align || 'center',
+          }
+        }
+      },
+    }
+  },
+  
+  parseHTML() {
+    return [
+      {
+        tag: 'audio',
+      },
+      {
+        tag: 'div[data-audio]',
+      },
+    ]
+  },
+  
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
+    const { src, controls, align } = HTMLAttributes;
+    
+    // Convert align value to HTML attributes and inline styles
+    let style = '';
+    let alignAttr = align;
+    
+    if (align === 'full') {
+      style = 'display: block; width: 100%; margin-left: auto; margin-right: auto;';
+      alignAttr = 'center';
+    } else if (align === 'center') {
+      style = 'display: block; margin-left: auto; margin-right: auto;';
+    } else if (align === 'left') {
+      style = 'float: left; margin-right: 1rem; max-width: 50%;';
+    } else if (align === 'right') {
+      style = 'float: right; margin-left: 1rem; max-width: 50%;';
+    }
+    
+    const audioAttrs: Record<string, any> = {
+      src: src,
+      controls: controls !== false ? 'controls' : undefined,
+      style: `margin: 1.5rem 0; width: 100%; max-width: 600px; ${style}`,
+    };
+    
+    if (alignAttr) {
+      audioAttrs.align = alignAttr;
+    }
+    
+    return [
+      'div',
+      {
+        class: 'audio-embed my-6',
+        'data-audio': '',
+        style: `position: relative; margin: 1.5rem 0; width: 100%; ${style}`,
+        align: alignAttr,
+      },
+      ['audio', audioAttrs],
     ];
   },
 });
@@ -366,10 +454,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [isVideoMenuOpen, setIsVideoMenuOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube');
+  const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false);
+  const [audioUrl, setAudioUrl] = useState('');
   const [isPdfMenuOpen, setIsPdfMenuOpen] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
   const [selectedImageNode, setSelectedImageNode] = useState<any>(null);
   const [selectedVideoNode, setSelectedVideoNode] = useState<any>(null);
+  const [selectedAudioNode, setSelectedAudioNode] = useState<any>(null);
   const [selectedNodeAlign, setSelectedNodeAlign] = useState<string>('center');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -442,6 +533,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         },
       }),
       VideoExtension,
+      AudioExtension,
       PdfExtension,
     ],
     content: content,
@@ -477,11 +569,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       
       setSelectedVideoNode(videoNode);
       
+      // Check if the selection contains an audio
+      const audioNode = editor.isActive('audio') ? editor.getAttributes('audio') : null;
+      setSelectedAudioNode(audioNode);
+      
       // Update selected node alignment
       if (imageNode) {
         setSelectedNodeAlign(imageNode.align || 'center');
       } else if (videoNode) {
         setSelectedNodeAlign(videoNode.align || 'center');
+      } else if (audioNode) {
+        setSelectedNodeAlign(audioNode.align || 'center');
       }
     },
     editorProps: {
@@ -650,6 +748,40 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         .chain()
         .focus()
         .updateAttributes('video', { 
+          align: selectedNodeAlign
+        })
+        .run();
+    }
+  };
+
+  const insertAudio = () => {
+    if (editor && audioUrl) {
+      const audioAttrs = {
+        src: audioUrl,
+        controls: true,
+        align: 'center'
+      };
+                
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'audio',
+          attrs: audioAttrs
+        })
+        .run();
+      
+      setAudioUrl('');
+      setIsAudioMenuOpen(false);
+    }
+  };
+
+  const updateSelectedAudio = () => {
+    if (editor && selectedAudioNode) {
+      editor
+        .chain()
+        .focus()
+        .updateAttributes('audio', { 
           align: selectedNodeAlign
         })
         .run();
@@ -883,6 +1015,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       editor.chain().focus().updateAttributes('video', { align }).run();
       setSelectedNodeAlign(align);
       updateSelectedVideo();
+    } else if (editor.isActive('audio')) {
+      editor.chain().focus().updateAttributes('audio', { align }).run();
+      setSelectedNodeAlign(align);
+      updateSelectedAudio();
     }
   };
 
@@ -1402,6 +1538,37 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               )}
             </div>
             
+            {/* Audio Button */}
+            <div className="relative">
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setIsAudioMenuOpen(!isAudioMenuOpen)}
+                type="button"
+                title="Insert Audio"
+              >
+                <Music className="h-4 w-4" />
+              </Button>
+              {isAudioMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 p-2 bg-white border rounded-md shadow-md z-10 flex flex-col gap-2 min-w-[300px]">
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-xs font-medium">Audio URL</label>
+                    <Input
+                      value={audioUrl}
+                      onChange={(e) => setAudioUrl(e.target.value)}
+                      placeholder="https://example.com/audio.mp3"
+                      className="w-full"
+                      onKeyDown={(e) => e.key === 'Enter' && insertAudio()}
+                    />
+                  </div>
+                  
+                  <Button size="sm" onClick={insertAudio} type="button" disabled={!audioUrl}>
+                    Insert Audio
+                  </Button>
+                </div>
+              )}
+            </div>
+            
             {/* PDF Button */}
             <div className="relative">
               <Button
@@ -1448,12 +1615,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </div>
         </div>
         
-        {/* Resize controls for selected image or video */}
-        {(selectedImageNode || selectedVideoNode) && (
+        {/* Resize controls for selected image, video or audio */}
+        {(selectedImageNode || selectedVideoNode || selectedAudioNode) && (
           <div className="flex flex-wrap gap-1 p-2 border-t bg-gray-100">
             <div className="flex items-center gap-2 text-sm">
               <Move className="h-4 w-4" />
-              {selectedImageNode ? 'Görsel' : 'Video'} Hizalama:
+              {selectedImageNode ? 'Görsel' : selectedVideoNode ? 'Video' : 'Ses'} Hizalama:
             </div>
             
             <div className="flex gap-1 items-center ml-2">
@@ -1680,6 +1847,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           pointer-events: none;
         }
         
+        /* Audio styles */
+        .ProseMirror .audio-embed {
+          margin: 1.5rem 0;
+          clear: both;
+          width: 100%;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        .ProseMirror .audio-embed audio {
+          width: 100%;
+          max-width: 600px;
+          display: block;
+        }
+        
+        .ProseMirror .audio-embed:hover {
+          outline: 1px solid #e5e7eb;
+          border-radius: 4px;
+        }
+        
+        .ProseMirror .audio-embed.ProseMirror-selectednode {
+          outline: 2px solid #0096fd;
+          border-radius: 4px;
+        }
+        
         /* PDF styles */
         .ProseMirror .pdf-embed {
           margin: 1.5rem 0;
@@ -1689,7 +1883,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           -webkit-user-select: none;
           -moz-user-select: none;
           -ms-user-select: none;
-        }
+เกี่ยวข้อง}
         
         .ProseMirror .pdf-embed iframe {
           width: 100% !important;
