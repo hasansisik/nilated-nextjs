@@ -159,12 +159,38 @@ const AudioExtension = TiptapNode.create({
     return {
       src: {
         default: null,
+        parseHTML: element => {
+          // Try to get src from audio element directly
+          if (element.tagName === 'AUDIO') {
+            return element.getAttribute('src');
+          }
+          // Try to get src from div[data-audio] > audio element
+          const audioElement = element.querySelector('audio');
+          if (audioElement) {
+            return audioElement.getAttribute('src');
+          }
+          return null;
+        },
+        renderHTML: attributes => {
+          if (attributes.src) {
+            return {
+              src: attributes.src,
+            }
+          }
+          return {}
+        }
       },
       controls: {
         default: true,
-        parseHTML: element => element.hasAttribute('controls'),
+        parseHTML: element => {
+          if (element.tagName === 'AUDIO') {
+            return element.hasAttribute('controls');
+          }
+          const audioElement = element.querySelector('audio');
+          return audioElement ? audioElement.hasAttribute('controls') : true;
+        },
         renderHTML: attributes => {
-          if (attributes.controls) {
+          if (attributes.controls !== false) {
             return {
               controls: 'true',
             }
@@ -174,7 +200,12 @@ const AudioExtension = TiptapNode.create({
       },
       align: {
         default: 'center',
-        parseHTML: element => element.getAttribute('align') || 'center',
+        parseHTML: element => {
+          if (element.tagName === 'AUDIO') {
+            return element.getAttribute('align') || 'center';
+          }
+          return element.getAttribute('align') || 'center';
+        },
         renderHTML: attributes => {
           return {
             align: attributes.align || 'center',
@@ -214,10 +245,14 @@ const AudioExtension = TiptapNode.create({
     }
     
     const audioAttrs: Record<string, any> = {
-      src: src,
       controls: controls !== false ? 'controls' : undefined,
       style: `margin: 1.5rem 0; width: 100%; max-width: 600px; ${style}`,
     };
+    
+    // Add src attribute if it exists
+    if (src) {
+      audioAttrs.src = src;
+    }
     
     if (alignAttr) {
       audioAttrs.align = alignAttr;
