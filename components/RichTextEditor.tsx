@@ -41,7 +41,7 @@ import {
   FileText,
   Music,
 } from 'lucide-react';
-import { uploadImageToCloudinary, getCloudinarySettings } from '@/utils/cloudinary';
+import { uploadImageToCloudinary, uploadAudioToCloudinary, getCloudinarySettings } from '@/utils/cloudinary';
 
 interface RichTextEditorProps {
   content: string;
@@ -456,6 +456,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [videoProvider, setVideoProvider] = useState<'youtube' | 'vimeo'>('youtube');
   const [isAudioMenuOpen, setIsAudioMenuOpen] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
+  const [isAudioUploading, setIsAudioUploading] = useState(false);
   const [isPdfMenuOpen, setIsPdfMenuOpen] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
   const [selectedImageNode, setSelectedImageNode] = useState<any>(null);
@@ -464,6 +465,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [selectedNodeAlign, setSelectedNodeAlign] = useState<string>('center');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const linkInputRef = useRef<HTMLInputElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -622,6 +624,32 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     } catch (error) {
       console.error("Error uploading image:", error);
       setIsUploading(false);
+    }
+  };
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is audio
+    if (!file.type.startsWith('audio/')) {
+      alert('Please select an audio file');
+      return;
+    }
+    
+    try {
+      setIsAudioUploading(true);
+      
+      // Upload audio using raw upload endpoint
+      const audioUrlResult = await uploadAudioToCloudinary(file);
+      
+      // Set the uploaded URL to state
+      setAudioUrl(audioUrlResult);
+      
+      setIsAudioUploading(false);
+    } catch (error) {
+      console.error("Error uploading audio:", error);
+      setIsAudioUploading(false);
     }
   };
 
@@ -1550,9 +1578,74 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <Music className="h-4 w-4" />
               </Button>
               {isAudioMenuOpen && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white border rounded-md shadow-md z-10 flex flex-col gap-2 min-w-[300px]">
+                <div className="absolute top-full left-0 mt-1 p-3 bg-white border rounded-md shadow-md z-10 flex flex-col gap-2 min-w-[300px]">
                   <div className="flex flex-col space-y-2">
-                    <label className="text-xs font-medium">Audio URL</label>
+                    <label className="text-xs font-medium">Upload Audio File</label>
+                    <input
+                      type="file"
+                      ref={audioInputRef}
+                      onChange={handleAudioUpload}
+                      className="hidden"
+                      accept="audio/*"
+                    />
+                    {!isAudioUploading && !audioUrl && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => audioInputRef.current?.click()} 
+                        type="button" 
+                        className="w-full"
+                      >
+                        <Music className="h-4 w-4 mr-2" />
+                        Choose Audio File
+                      </Button>
+                    )}
+                    
+                    {isAudioUploading && (
+                      <div className="flex items-center justify-center p-2 bg-gray-50 rounded border">
+                        <div className="animate-pulse text-sm">Uploading audio...</div>
+                      </div>
+                    )}
+                    
+                    {audioUrl && (
+                      <div className="space-y-2">
+                        <div className="flex flex-col space-y-1">
+                          <label className="text-xs font-medium">Cloudinary URL</label>
+                          <Input 
+                            value={audioUrl} 
+                            readOnly 
+                            className="text-xs bg-gray-50"
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setAudioUrl("");
+                              if (audioInputRef.current) audioInputRef.current.value = "";
+                            }}
+                            type="button"
+                          >
+                            Clear
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={insertAudio} 
+                            type="button"
+                          >
+                            Insert Audio
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex flex-col space-y-2">
+                    <label className="text-xs font-medium">Or Enter Audio URL</label>
                     <Input
                       value={audioUrl}
                       onChange={(e) => setAudioUrl(e.target.value)}
@@ -1560,11 +1653,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                       className="w-full"
                       onKeyDown={(e) => e.key === 'Enter' && insertAudio()}
                     />
+                    <Button size="sm" onClick={insertAudio} type="button" disabled={!audioUrl}>
+                      Insert Audio
+                    </Button>
                   </div>
-                  
-                  <Button size="sm" onClick={insertAudio} type="button" disabled={!audioUrl}>
-                    Insert Audio
-                  </Button>
                 </div>
               )}
             </div>
